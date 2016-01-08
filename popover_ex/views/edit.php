@@ -1,3 +1,13 @@
+<?php
+/*
+PopoverEx plugin for Widgetkit 2.
+Author: Ramil Valitov
+E-mail: ramilvalitov@gmail.com
+Web: http://www.valitov.me/
+Git: https://github.com/rvalitov/widgetkit-popover-ex
+*/
+?>
+
 <div class="uk-grid uk-grid-divider uk-form uk-form-horizontal" data-uk-grid-margin>
     <div class="uk-width-medium-1-4">
 
@@ -78,13 +88,64 @@
                         </select>
                     </div>
                 </div>
-
-                <div class="uk-form-row">
+				
+				<div class="uk-form-row">
                     <span class="uk-form-label">{{'Color' | trans}}</span>
                     <div class="uk-form-controls uk-form-controls-text">
                         <label><input type="checkbox" ng-model="widget.data['contrast']"> {{'Use a high-contrast color.' | trans}}</label>
                     </div>
                 </div>
+				
+				<h3 class="wk-form-heading" ng-if="widget.data['toggle'] == ''">{{'Custom Toggle Icon Settings' | trans}}</h3>
+				
+				<div class="uk-form-row" ng-if="widget.data['toggle'] == ''">
+                    <label class="uk-form-label">{{'Image' | trans}}</label><span  data-uk-tooltip style="float: left; margin-top: 5px;" title="Path to an image file that will be used as a custom toggle icon. This setting sets the default icon for all content elements. If this field is left empty, then a default icon (that is distributed with this plugin) will be used. You can set a unique icon for any content element: you can do this by setting a 'Custom Toggle Image' field in the 'Content Settings' tab. This field is visible and available only if you use 'Custom' content source type. The 'Custom Toggle Image' field has a higher priority and if set will override the value of this setting."><i class="uk-icon uk-icon-question-circle uk-margin-small-left" style="color:#ffb105"></i></span>
+                    <div class="uk-form-controls">
+                        <field-media title="item.title" media="widget.data.custom_toggle_path"></field-media>
+					</div>
+				</div>
+				
+				<div class="uk-form-row" ng-if="widget.data['toggle'] == ''">
+					<label class="uk-form-label" for="wk-custom_toggle_width">{{'Width' | trans}}</label>
+                    <div class="uk-form-controls">
+                        <input id="wk-custom_toggle_width" class="uk-form-width-medium" type="text" ng-model="widget.data['custom_toggle_width']"><span  data-uk-tooltip title="The width of the custom toggle icon in pixels or percents. This field is mandatory and should be specified."><i class="uk-icon uk-icon-question-circle uk-margin-small-left" style="color:#ffb105"></i></span>
+                    </div>
+				</div>
+				
+				<div class="uk-form-row" ng-if="widget.data['toggle'] == ''">
+					<label class="uk-form-label" for="wk-custom_toggle_height">{{'Height' | trans}}</label>
+                    <div class="uk-form-controls">
+                        <input id="wk-custom_toggle_height" class="uk-form-width-medium" type="text" ng-model="widget.data['custom_toggle_height']"><span  data-uk-tooltip title="The height of the custom toggle icon in pixels or percents. This field is mandatory and should be specified."><i class="uk-icon uk-icon-question-circle uk-margin-small-left" style="color:#ffb105"></i></span>
+                    </div>
+				</div>
+				
+				<div class="uk-form-row" ng-if="widget.data['toggle'] == ''">
+					<label class="uk-form-label" for="wk-custom_toggle_min_width">{{'Minimum Width (px)' | trans}}</label>
+                    <div class="uk-form-controls">
+                        <input id="wk-custom_toggle_min_width" class="uk-form-width-medium" type="text" ng-model="widget.data['custom_toggle_min_width']" onkeypress='return event.charCode >= 48 && event.charCode <= 57'><span  data-uk-tooltip title="The minimum width of the custom toggle in pixels. This settings is useful to support responsive design and make dynamic size of the custom toggle icon. If this field is left empty, then no restriction to minimum width is applied."><i class="uk-icon uk-icon-question-circle uk-margin-small-left" style="color:#ffb105"></i></span>
+                    </div>
+				</div>
+				
+				<div class="uk-form-row" ng-if="widget.data['toggle'] == ''">
+					<label class="uk-form-label" for="wk-custom_toggle_min_height">{{'Minimum Height (px)' | trans}}</label>
+                    <div class="uk-form-controls">
+                        <input id="wk-custom_toggle_min_height" class="uk-form-width-medium" type="text" ng-model="widget.data['custom_toggle_min_height']" onkeypress='return event.charCode >= 48 && event.charCode <= 57'><span  data-uk-tooltip title="The minimum height of the custom toggle in pixels. This settings is useful to support responsive design and make dynamic size of the custom toggle icon. If this field is left empty, then no restriction to minimum height is applied."><i class="uk-icon uk-icon-question-circle uk-margin-small-left" style="color:#ffb105"></i></span>
+                    </div>
+				</div>
+				
+				<div class="uk-form-row" ng-if="widget.data['toggle'] == ''">
+					<label class="uk-form-label" for="wk-custom_toggle_max_width">{{'Maximum Width (px)' | trans}}</label>
+                    <div class="uk-form-controls">
+                        <input id="wk-custom_toggle_max_width" class="uk-form-width-medium" type="text" ng-model="widget.data['custom_toggle_max_width']" onkeypress='return event.charCode >= 48 && event.charCode <= 57'><span  data-uk-tooltip title="The maximum width of the custom toggle in pixels. This settings is useful to support responsive design and make dynamic size of the custom toggle icon. If this field is left empty, then no restriction to maximum width is applied."><i class="uk-icon uk-icon-question-circle uk-margin-small-left" style="color:#ffb105"></i></span>
+                    </div>
+				</div>
+				
+				<div class="uk-form-row" ng-if="widget.data['toggle'] == ''">
+					<label class="uk-form-label" for="wk-custom_toggle_max_height">{{'Maximum Height (px)' | trans}}</label>
+                    <div class="uk-form-controls">
+                        <input id="wk-custom_toggle_max_height" class="uk-form-width-medium" type="text" ng-model="widget.data['custom_toggle_max_height']" onkeypress='return event.charCode >= 48 && event.charCode <= 57'><span  data-uk-tooltip title="The maximum height of the custom toggle in pixels. This settings is useful to support responsive design and make dynamic size of the custom toggle icon. If this field is left empty, then no restriction to maximum height is applied."><i class="uk-icon uk-icon-question-circle uk-margin-small-left" style="color:#ffb105"></i></span>
+                    </div>
+				</div>
 
                 <h3 class="wk-form-heading">{{'Items' | trans}}</h3>
 

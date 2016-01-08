@@ -1,4 +1,11 @@
 <?php
+/*
+PopoverEx plugin for Widgetkit 2.
+Author: Ramil Valitov
+E-mail: ramilvalitov@gmail.com
+Web: http://www.valitov.me/
+Git: https://github.com/rvalitov/widgetkit-popover-ex
+*/
 
 // JS Options
 $options = array();
@@ -7,6 +14,7 @@ $options[] = '\'mode\': \'' . $settings['mode'] . '\'';
 
 $options = '{'.implode(',', array_filter($options)).'}';
 
+$myid=uniqid('wk-popover_ex');
 
 // Toggle
 $toggle  = 'wk-popover-toggle';
@@ -77,7 +85,23 @@ if ($settings['image_hero_width'] != 'auto' || $settings['image_hero_height'] !=
 ?>
 
 <?php if ($settings['image']) : ?>
-<div class="<?php echo $settings['class']; ?>">
+<?php 
+if (!$settings['toggle'])
+{
+	//Adding settings for custom toggle
+	$custom_style='#' . $myid . ' div.uk-position-absolute {' .
+					( (strlen(trim($settings['custom_toggle_width']))) ? 'width:'.$settings['custom_toggle_width'] . ';' : '' ) . 
+					( (strlen(trim($settings['custom_toggle_height']))) ? 'height:' . $settings['custom_toggle_height'] . ';' : '' ) . 
+					( (strlen(trim($settings['custom_toggle_min_width']))) ? 'min-width:' . $settings['custom_toggle_min_width'] . 'px;' : '' ) . 
+					( (strlen(trim($settings['custom_toggle_min_height']))) ? 'min-height:' . $settings['custom_toggle_min_height'] . 'px;' : '' ) . 
+					( (strlen(trim($settings['custom_toggle_max_width']))) ? 'max-width:' . $settings['custom_toggle_max_width'] . 'px;' : '' ) . 
+					( (strlen(trim($settings['custom_toggle_max_height']))) ? 'max-height:' . $settings['custom_toggle_max_height'] . 'px;' : '' ) .
+					'}';
+	$document = JFactory::getDocument();
+	$document->addStyleDeclaration($custom_style);
+}
+?>
+<div class="uk-widgetkit-popover-ex <?php echo $settings['class']; ?>" id="<?php echo $myid;?>">
     <div class="uk-position-relative uk-display-inline-block">
 
         <img src="<?php echo $image; ?>" alt="">
@@ -99,7 +123,23 @@ if ($settings['image_hero_width'] != 'auto' || $settings['image_hero_height'] !=
 
             <?php if ($settings['contrast']) echo '<div class="uk-contrast">'; ?>
 
-            <a class="<?php echo $toggle; ?>"></a>
+            <a class="<?php echo $toggle; ?>" style="<?php
+			if (!$settings['toggle'])
+			{
+				//Setting custom icon image
+				if (strlen(trim($settings['custom_toggle_path'])))
+					$toggle_file=$settings['custom_toggle_path'];
+				else
+					$toggle_file='';
+				if ( (isset($item['custom_icon_image'])) && (strlen(trim($item['custom_icon_image']))>0) )
+					$toggle_file=$item['custom_icon_image'];
+				//Checking for absolute URL for CSS
+				if ( (substr($toggle_file, 0, 7) != 'http://') && (substr($toggle_file, 0, 8) != 'https://') && (substr($toggle_file, 0, 2) != '//') && (strlen($toggle_file)>2) )
+					$toggle_file='/'.$toggle_file;
+				if (strlen($toggle_file)>0)
+					echo 'background-image: url(\'' . $toggle_file . '\')';
+			}
+			?>"></a>
 
             <?php if ($settings['contrast']) echo '</div>'; ?>
 
