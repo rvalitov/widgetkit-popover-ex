@@ -57,6 +57,7 @@ return array(
 			'custom_toggle_min_height'	=> '48',
 			'custom_toggle_max_width'	=> '128',
 			'custom_toggle_max_height'	=> '128',
+			'toggle_opacity'       		=> '1',
 
             'media'             => true,
             'image_width'       => 'auto',
@@ -83,7 +84,7 @@ return array(
     'events' => array(
 
         'init.site' => function($event, $app) {
-			$app['styles']->add('uikit-popover_ex', 'plugins/widgets/popover_ex/assets/styles.css', array('uikit'));
+			$app['styles']->add('widgetkit-popover_ex', 'plugins/widgets/popover_ex/styles/style.css', array('uikit'));
         },
 
         'init.admin' => function($event, $app) {
@@ -91,6 +92,10 @@ return array(
 			//Adding tooltip:
 			$app['scripts']->add('uikit-tooltip', 'vendor/assets/uikit/js/components/tooltip.min.js', array('uikit'));
 			$app['styles']->add('uikit-tooltip', 'https://cdnjs.cloudflare.com/ajax/libs/uikit/2.24.3/css/components/tooltip.min.css', array('uikit'));
+			//Marked:
+			$app['scripts']->add('marked', 'plugins/widgets/popover_ex/assets/marked.min.js', array('uikit'));
+			//Updater:
+			$app['scripts']->add('popover_ex.updater', 'plugins/widgets/popover_ex/assets/updater.js', array('popover_ex'));
         }
 
     )

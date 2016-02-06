@@ -18,7 +18,7 @@ $myid=uniqid('wk-popover_ex');
 
 // Toggle
 $toggle  = 'wk-popover-toggle';
-$toggle .= $settings['toggle'] ? ' uk-icon-' . $settings['toggle'] . ' uk-icon-button' : '';
+$toggle .= $settings['toggle'] ? ' uk-icon-' . $settings['toggle'] . ' uk-icon-button' : ' wk-popover-custom';
 
 // Panel
 $panel = 'uk-panel';
@@ -89,16 +89,18 @@ if ($settings['image_hero_width'] != 'auto' || $settings['image_hero_height'] !=
 if (!$settings['toggle'])
 {
 	//Adding settings for custom toggle
-	$custom_style='#' . $myid . ' div.uk-position-absolute {' .
-					( (strlen(trim($settings['custom_toggle_width']))) ? 'width:'.$settings['custom_toggle_width'] . ';' : '' ) . 
-					( (strlen(trim($settings['custom_toggle_height']))) ? 'height:' . $settings['custom_toggle_height'] . ';' : '' ) . 
-					( (strlen(trim($settings['custom_toggle_min_width']))) ? 'min-width:' . $settings['custom_toggle_min_width'] . 'px;' : '' ) . 
-					( (strlen(trim($settings['custom_toggle_min_height']))) ? 'min-height:' . $settings['custom_toggle_min_height'] . 'px;' : '' ) . 
-					( (strlen(trim($settings['custom_toggle_max_width']))) ? 'max-width:' . $settings['custom_toggle_max_width'] . 'px;' : '' ) . 
-					( (strlen(trim($settings['custom_toggle_max_height']))) ? 'max-height:' . $settings['custom_toggle_max_height'] . 'px;' : '' ) .
-					'}';
-	$document = JFactory::getDocument();
-	$document->addStyleDeclaration($custom_style);
+	$custom_style=	( (strlen(trim($settings['custom_toggle_width']))) ? ('width:'.$settings['custom_toggle_width'] . ';') : '' ) . 
+					( (strlen(trim($settings['custom_toggle_height']))) ? ('height:' . $settings['custom_toggle_height'] . ';') : '' ) . 
+					( (strlen(trim($settings['custom_toggle_min_width']))) ? ('min-width:' . $settings['custom_toggle_min_width'] . 'px;') : '' ) . 
+					( (strlen(trim($settings['custom_toggle_min_height']))) ? ('min-height:' . $settings['custom_toggle_min_height'] . 'px;') : '' ) . 
+					( (strlen(trim($settings['custom_toggle_max_width']))) ? ('max-width:' . $settings['custom_toggle_max_width'] . 'px;') : '' ) . 
+					( (strlen(trim($settings['custom_toggle_max_height']))) ? ('max-height:' . $settings['custom_toggle_max_height'] . 'px;') : '' ) ;
+}
+$opacity_style='';
+if (is_numeric($settings['toggle_opacity'])){
+	$v=$settings['toggle_opacity']+0;
+	if ( ($v>=0) && ($v<1) )
+		$opacity_style='opacity:'.$v.';';
 }
 ?>
 <div class="uk-widgetkit-popover-ex <?php echo $settings['class']; ?>" id="<?php echo $myid;?>">
@@ -119,11 +121,12 @@ if (!$settings['toggle'])
 
         ?>
 
-        <div class="uk-position-absolute uk-hidden-small" style="left:<?php echo $left; ?>; top:<?php echo $top; ?>;" data-uk-dropdown="<?php echo $options; ?>">
+        <div class="uk-position-absolute uk-hidden-small" style="left:<?php echo $left; ?>; top:<?php echo $top; ?>;<?php echo $custom_style;?>" data-uk-dropdown="<?php echo $options; ?>">
 
             <?php if ($settings['contrast']) echo '<div class="uk-contrast">'; ?>
 
             <a class="<?php echo $toggle; ?>" style="<?php
+			echo $opacity_style;
 			if (!$settings['toggle'])
 			{
 				//Setting custom icon image
@@ -139,6 +142,7 @@ if (!$settings['toggle'])
 				if (strlen($toggle_file)>0)
 					echo 'background-image: url(\'' . $toggle_file . '\')';
 			}
+			
 			?>"></a>
 
             <?php if ($settings['contrast']) echo '</div>'; ?>
