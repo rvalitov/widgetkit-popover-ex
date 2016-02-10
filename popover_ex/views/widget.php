@@ -136,9 +136,6 @@ if (is_numeric($settings['toggle_opacity'])){
 					$toggle_file='';
 				if ( (isset($item['custom_icon_image'])) && (strlen(trim($item['custom_icon_image']))>0) )
 					$toggle_file=$item['custom_icon_image'];
-				//Checking for absolute URL for CSS
-				if ( (substr($toggle_file, 0, 7) != 'http://') && (substr($toggle_file, 0, 8) != 'https://') && (substr($toggle_file, 0, 2) != '//') && (strlen($toggle_file)>2) )
-					$toggle_file='/'.$toggle_file;
 				if (strlen($toggle_file)>0)
 					echo 'background-image: url(\'' . $toggle_file . '\')';
 			}
