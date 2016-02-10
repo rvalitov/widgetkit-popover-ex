@@ -7,9 +7,9 @@ jQuery(document).ready(function($){
 	/* Start of widget specific settings */
 	var distr_name='widgetkit-popover-ex';
 	var widget_name='PopoverEx';
-	var widget_version='v1.1';
+	var widget_version='v1.2';
 	/*CAUTION: the month is zero-based*/
-	var widget_date=printNiceDate(new Date(2016,01,06));
+	var widget_date=printNiceDate(new Date(2016,01,10));
 	var widget_logo='https://raw.githubusercontent.com/wiki/rvalitov/widgetkit-popover-ex/images/logo.png';
 	var widget_wiki=git_url+distr_name+'/wiki';
 	var widget_website=git_url+distr_name;
