@@ -1,3 +1,5 @@
+![Version](https://img.shields.io/badge/Release-v1.2.0-green.svg?style=flat) ![Widgetkit](https://img.shields.io/badge/Widgetkit-v2.4.x+-green.svg?style=flat) ![Joomla](https://img.shields.io/badge/Joomla!-v3.4.x+-yellow.svg?style=flat) ![Wordpress](https://img.shields.io/badge/Wordpress-v4.4.x+-yellow.svg?style=flat)
+
 ![PopoverEx widget logo](https://raw.githubusercontent.com/wiki/rvalitov/widgetkit-popover-ex/images/logo.png)
 
 # Overview
@@ -40,6 +42,13 @@ Some issues about using the widget are available in the [Wiki area](https://gith
 
 # Feedback
 Your feedback is very appreciated. If you want to see new features in this module, please, post your ideas and feature requests in the [issue tracker](https://github.com/rvalitov/widgetkit-popover-ex/issues).
+
+# Donations
+This is a free project that I do in my spare time. If you find it useful, then you can support it by donating some amount of money. This will help to keep the project alive and making it better: develop new features, make new releases, fix bugs, update the [manuals](https://github.com/rvalitov/widgetkit-popover-ex/wiki), and provide at least some minimal technical support (there's an [issue tracker here](https://github.com/rvalitov/widgetkit-popover-ex/issues)).
+
+You can choose any payment gateway you prefer:
+
+[![PayPal](https://raw.githubusercontent.com/wiki/rvalitov/widgetkit-map-ex/images/money/paypal.png)](https://www.paypal.me/valitov/15eur) [![WebMoney](https://raw.githubusercontent.com/wiki/rvalitov/widgetkit-map-ex/images/money/webmoney.png)](https://funding.wmtransfer.com/mapex-widget) [![YandexMoney](https://raw.githubusercontent.com/wiki/rvalitov/widgetkit-map-ex/images/money/yandex.png)](https://money.yandex.ru/to/410011424143476)
 
 # Support or Contact
 Having trouble with PopoverEx Widget? May be something has already been described in the [Wiki area](https://github.com/rvalitov/widgetkit-popover-ex/wiki) or reported in the [issue tracker](https://github.com/rvalitov/widgetkit-popover-ex/issues). If you don't find your problem there, then, please, add your issue there. 
