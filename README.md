@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Release-v1.2.0-green.svg?style=flat) ![Widgetkit](https://img.shields.io/badge/Widgetkit-v2.4.x+-green.svg?style=flat) ![Joomla](https://img.shields.io/badge/Joomla!-v3.4.x+-yellow.svg?style=flat) ![Wordpress](https://img.shields.io/badge/Wordpress-v4.4.x+-yellow.svg?style=flat)
+![Version](https://img.shields.io/badge/Release-v1.2.1-green.svg?style=flat) ![Widgetkit](https://img.shields.io/badge/Widgetkit-v2.4.x+-green.svg?style=flat) ![Joomla](https://img.shields.io/badge/Joomla!-v3.4.x+-yellow.svg?style=flat) ![Wordpress](https://img.shields.io/badge/Wordpress-v4.4.x+-yellow.svg?style=flat) ![PHP7](https://img.shields.io/badge/PHP7-compatible-blue.svg?style=flat)
 
 ![PopoverEx widget logo](https://raw.githubusercontent.com/wiki/rvalitov/widgetkit-popover-ex/images/logo.png)
 
@@ -11,6 +11,10 @@
 * **Hover/Click behavior** - you can select how the widget will respond: the dropdown can be displayed when the user moves their mouse over the icon or when they click it.
 * **Panel styles** - different panel styles for the dropdown.
 * **Backward compatibility** - all other behavior, styling and features of the original [Popover widget](http://yootheme.com/demo/widgetkit/joomla/index.php/home/popover) are preserved.
+* **Multilingual interface**, translated into languages:
+	* **English** (en_GB)
+	* **Русский** (ru_RU)
+	* Your language not listed? You can help with translation, [read more](https://github.com/rvalitov/widgetkit-popover-ex/wiki/Translation-issues).
 
 ### Unique Features
 The new features that the PopoverEx has and that are not available in the original Popover widget:
@@ -23,10 +27,10 @@ The new features that the PopoverEx has and that are not available in the origin
 * **Update notifications** - you will be notified if new versions of the widget are available.
 
 # Supported platforms
-* The code is based on Widgetkit 2.5.2 (identical to 2.5.3), however it should work with any Widgetkit 2.4.x and later.
+* The code is based on Widgetkit 2.5.2 (identical to 2.5.3), however it should work with any Widgetkit 2.4.x and later. Tested on Widgetkit 2.5.x, 2.6.x, 2.7.x and 2.8.x too.
+* PHP5 and PHP7 compatible
 * Joomla 3.4.x or later required
-
-Widget should work with Wordpress 4.4.x (according to feedback from users; I can't test it personally, because I don't have the required subscription).
+* Wordpress 4.4.x or later
 
 # How to install?
 The installation procedure is described [here](https://github.com/rvalitov/widgetkit-popover-ex/wiki/How-to-install).
@@ -40,6 +44,9 @@ Some issues about using the widget are available in the [Wiki area](https://gith
 * Logo is based on [Tango Icon Library](https://www.iconfinder.com/iconsets/tango-icon-library)
 * The default toggle icon is created by [Icons Land](https://www.iconfinder.com/iconsets/softwaredemo)
 
+## Disclaimer
+This project is NOT affiliated with, endorsed, or sponsored by the Yootheme. Widgetkit, its name, trademark, and other aspects of the app are trademarked and owned by their respective owners.
+
 # Feedback
 Your feedback is very appreciated. If you want to see new features in this module, please, post your ideas and feature requests in the [issue tracker](https://github.com/rvalitov/widgetkit-popover-ex/issues).
 
@@ -50,10 +57,10 @@ You can choose any payment method you prefer:
 
 Your Currency | Payment Method
 ------------ | -------------
-Euro € | [![Card](https://img.shields.io/badge/EURO-Debit/Credit%20Card-6f202b.svg?style=flat)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BJJF3E6DBRYHA) [![PayPal](https://img.shields.io/badge/EURO-PayPal-blue.svg?style=flat)](https://www.paypal.me/valitov/15eur) [![WebMoney](https://img.shields.io/badge/EURO-WebMoney-00484f.svg?style=flat)](https://funding.wmtransfer.com/widgets-euro)
-USD $ | [![Card](https://img.shields.io/badge/USD-Debit/Credit%20Card-6f202b.svg?style=flat)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=B8VMNU7SEAU8J) [![PayPal](https://img.shields.io/badge/USD-PayPal-blue.svg?style=flat)](https://www.paypal.me/valitov/15usd) [![WebMoney](https://img.shields.io/badge/USD-WebMoney-00484f.svg?style=flat)](https://funding.wmtransfer.com/widgets-usd)
-Russian Ruble ₽ | [![Card](https://img.shields.io/badge/RUB-Debit/Credit%20Card-6f202b.svg?style=flat)](https://money.yandex.ru/to/410011424143476) [![PayPal](https://img.shields.io/badge/RUB-PayPal-blue.svg?style=flat)](https://www.paypal.me/valitov/150rub) [![WebMoney](https://img.shields.io/badge/RUB-WebMoney-00484f.svg?style=flat)](https://funding.wmtransfer.com/widgets-rub) [![YandexMoney](https://img.shields.io/badge/RUB-YandexMoney-5b0d56.svg?style=flat)](https://money.yandex.ru/to/410011424143476)
-Other | [![Card](https://img.shields.io/badge/OTHER-Debit/Credit%20Card-6f202b.svg?style=flat)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BJJF3E6DBRYHA) [![PayPal](https://img.shields.io/badge/OTHER-PayPal-blue.svg?style=flat)](https://www.paypal.me/valitov) [![WebMoney](https://img.shields.io/badge/OTHER-WebMoney-00484f.svg?style=flat)](https://funding.wmtransfer.com/widgets-euro)
+Euro € | [![Card](https://img.shields.io/badge/EURO-Debit/Credit%20Card-6f202b.svg?style=flat)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BJJF3E6DBRYHA) [![PayPal](https://img.shields.io/badge/EURO-PayPal-blue.svg?style=flat)](https://www.paypal.me/valitov/0eur) 
+USD $ | [![Card](https://img.shields.io/badge/USD-Debit/Credit%20Card-6f202b.svg?style=flat)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=B8VMNU7SEAU8J) [![PayPal](https://img.shields.io/badge/USD-PayPal-blue.svg?style=flat)](https://www.paypal.me/valitov/0usd) 
+Russian Ruble ₽ | [![Card](https://img.shields.io/badge/RUB-Debit/Credit%20Card-6f202b.svg?style=flat)](https://money.yandex.ru/to/410011424143476) [![PayPal](https://img.shields.io/badge/RUB-PayPal-blue.svg?style=flat)](https://www.paypal.me/valitov/0rub) [![YandexMoney](https://img.shields.io/badge/RUB-YandexMoney-5b0d56.svg?style=flat)](https://money.yandex.ru/to/410011424143476)
+Other | [![Card](https://img.shields.io/badge/OTHER-Debit/Credit%20Card-6f202b.svg?style=flat)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BJJF3E6DBRYHA) [![PayPal](https://img.shields.io/badge/OTHER-PayPal-blue.svg?style=flat)](https://www.paypal.me/valitov)
 
 # Support or Contact
 Having trouble with PopoverEx Widget? May be something has already been described in the [Wiki area](https://github.com/rvalitov/widgetkit-popover-ex/wiki) or reported in the [issue tracker](https://github.com/rvalitov/widgetkit-popover-ex/issues). If you don't find your problem there, then, please, add your issue there. 
