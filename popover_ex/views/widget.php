@@ -81,7 +81,7 @@ if ($settings['image_hero_width'] != 'auto' || $settings['image_hero_height'] !=
     $image = $app['image']->thumbnailUrl($settings['image'], $width, $height);
 
 }
-
+$custom_style='';
 ?>
 
 <?php if ($settings['image']) : ?>
