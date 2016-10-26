@@ -158,7 +158,7 @@ $plugin=new WidgetkitExPlugin($app);
 				</div>
 				
 				<div class="uk-form-row" ng-if="widget.data['toggle'] == ''">
-					<span class="uk-form-label" for="wk-custom_toggle_max_height">{{'Maximum Height (px)' | trans}}<span  data-uk-tooltip title="{{ 'The maximum height of the custom toggle icon in pixels. This settings is useful to support responsive design and make dynamic size of the custom toggle icon. If this field is left empty, then no restriction to maximum height is applied.' | trans}}"><i class="uk-icon uk-icon-question-circle uk-margin-small-left" style="color:#ffb105"></i></span></span>
+					<span class="uk-form-label" for="wk-custom_toggle_max_height">{{'Maximum Height (px)' | trans}}<span  data-uk-tooltip title="{{ 'The maximum height of the custom toggle icon in pixels. This setting is useful to support responsive design and make dynamic size of the custom toggle icon. If this field is left empty, then no restriction to maximum height is applied.' | trans}}"><i class="uk-icon uk-icon-question-circle uk-margin-small-left" style="color:#ffb105"></i></span></span>
                     <div class="uk-form-controls">
                         <input id="wk-custom_toggle_max_height" class="uk-form-width-medium" type="text" ng-model="widget.data['custom_toggle_max_height']" onkeypress='return event.charCode >= 48 && event.charCode <= 57'>
                     </div>
@@ -213,18 +213,19 @@ $plugin=new WidgetkitExPlugin($app);
                             <option value="icon">{{'Icon' | trans}}</option>
                             <option value="image">{{'Image' | trans}} ({{'If second one exists' | trans}})</option>
                         </select>
-                        <p class="uk-form-controls-condensed" ng-if="widget.data.media_overlay == 'icon'">
-                            <label>
-                                <select class="uk-form-width-small" ng-model="widget.data['overlay_animation']">
-                                    <option value="fade">{{'Fade' | trans}}</option>
-                                    <option value="slide-top">{{'Slide Top' | trans}}</option>
-                                    <option value="slide-bottom">{{'Slide Bottom' | trans}}</option>
-                                    <option value="slide-left">{{'Slide Left' | trans}}</option>
-                                    <option value="slide-right">{{'Slide Right' | trans}}</option>
-                                </select>
-                                {{'Animation' | trans}}<span  data-uk-tooltip style="margin-top: 5px;" title="{{ 'The animation that will be applied to the overlay when being displayed.' | trans}}"><i class="uk-icon uk-icon-question-circle uk-margin-small-left" style="color:#ffb105"></i></span>
-                            </label>
-                        </p>
+                    </div>
+                </div>
+				
+				<div class="uk-form-row" ng-if="widget.data.media_overlay == 'icon'">
+                    <span class="uk-form-label" for="wk-media-overlay">{{'Animation' | trans}}<span  data-uk-tooltip style="margin-top: 5px;" title="{{ 'The animation that will be applied to the overlay when being displayed.' | trans}}"><i class="uk-icon uk-icon-question-circle uk-margin-small-left" style="color:#ffb105"></i></span></span>
+                    <div class="uk-form-controls">
+                        <select class="uk-form-width-medium" ng-model="widget.data['overlay_animation']">
+							<option value="fade">{{'Fade' | trans}}</option>
+							<option value="slide-top">{{'Slide Top' | trans}}</option>
+							<option value="slide-bottom">{{'Slide Bottom' | trans}}</option>
+							<option value="slide-left">{{'Slide Left' | trans}}</option>
+							<option value="slide-right">{{'Slide Right' | trans}}</option>
+						</select>
                     </div>
                 </div>
 
