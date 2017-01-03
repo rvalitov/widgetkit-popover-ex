@@ -343,6 +343,9 @@ $plugin=new WidgetkitExPlugin($app);
 				<h3 class="wk-form-heading">{{'Newsletter' | trans}}</h3>
 	
 				<?php $plugin->printNewsletterInfo($app);?>
+				
+				<h3 class="wk-form-heading">{{'Donation' | trans}}</h3>
+				<?php $plugin->printDonationInfo($app);?>
 
             </li>
         </ul>

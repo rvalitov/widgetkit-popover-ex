@@ -14,6 +14,126 @@ Web: http://www.valitov.me/
 
 namespace WidgetkitEx\PopoverEx{
 
+//Class describes file or directory
+class WKDiskItem{
+	public $name;
+	public $fullname;
+	public $relativename;
+	public $is_writable;
+	public $size;//Can be zero for directory
+	public $hash;
+	public $is_file;
+	public $contents;//Other items inside the directory, empty if it's a file
+	
+	//$relpath - relative path of the root item, used for filling the $relativename fields
+	//$githash - if true, then SHA1 hash of Git style is calculated, else SHA1 of the file.
+	public function AnalyzeItem($fullname,$relpath="",$githash=true){
+		$this->fullname=$fullname;
+		$this->name=pathinfo($fullname,PATHINFO_BASENAME);
+		$this->is_file=!is_dir($this->fullname);
+		$this->is_writable=is_writable($this->fullname);
+		$this->relativename=$this->name;
+		if ($relpath)
+			$this->relativename=$relpath.$this->name;
+		$this->contents=null;
+		if ($this->is_file){
+			$this->size=filesize($this->fullname);
+			if ($githash){
+				$fc=file_get_contents ($this->fullname);
+				if ($fc!==false)
+					$this->hash=sha1('blob '.$this->size."\0".$fc);
+			}
+			else
+				$this->hash=sha1_file($this->fullname);
+		}
+		else{
+			$result=array();
+			$cdir = scandir($fullname);
+			foreach ($cdir as $key => $value)
+				if (!in_array($value,array(".",".."))) {
+					$item=new WKDiskItem();
+					$item->AnalyzeItem($fullname . DIRECTORY_SEPARATOR . $value,$this->relativename. DIRECTORY_SEPARATOR);
+					array_push($result,$item);
+				}
+			$this->contents=$result; 
+		}
+	}
+	
+	private static function printDiskItem($value){
+		if (is_object(!$value))
+			return '';
+		$color;
+		$list='';
+		if ($value->is_writable)
+			$color='<span class="uk-text-success"><i class="uk-icon-check uk-margin-small-right"></i>';
+		else
+			$color='<span class="uk-text-danger"><i class="uk-icon-warning uk-margin-small-right"></i>';
+		if ($value->contents){
+			//Folder
+			$list.='<li>'.$color.'<i class="uk-icon-folder-open-o uk-margin-small-right"></i>'.htmlspecialchars($value->name).'</span>';
+			$list.='<ul class="uk-list">';
+			$list.=WKDiskItem::printStructureInt($value->contents,true);
+			$list.='</li></ul>';
+		}
+		else{
+			//File
+			$list.='<li>'.$color.'<i class="uk-icon-file-o uk-margin-small-right"></i>'.htmlspecialchars($value->name).'</span></li>';
+		}
+		return $list;
+	}
+	
+	//Makes a beautiful output of directory structure
+	private static function printStructureInt($array,$nested=false){
+		$list='';
+		if (!$nested)
+			$list.='<ul class="uk-list">';
+		if (is_array($array))
+			foreach ($array as $value)
+				$list.=WKDiskItem::printDiskItem($value);
+		else
+			$list.=WKDiskItem::printDiskItem($array);
+		if (!$nested)
+			$list.='</ul>';
+		return $list;
+	}
+	
+	//Makes a beautiful output of directory structure
+	public function printStructure(){
+		return WKDiskItem::printStructureInt($this);
+	}
+	
+	public function hasWriteAccessProblems(){
+		if (!$this->is_writable)
+			return true;
+		if (is_array($this->contents))
+			foreach ($this->contents as $value)
+				if (!$value->is_writable)
+					return true;
+		return false;
+	}
+	
+	public function toArrayItem(){
+		if (!$this->is_file)
+			return false;
+		return array('name'=>$this->relativename,'size'=>$this->size,'hash'=>$this->hash);
+	}
+	
+	//Returns all the information about files in a single array
+	public function toArray(){
+		$l=array();
+		$i=$this->toArrayItem();
+		if (is_array($i))
+			return array($i);
+		if (is_array($this->contents))
+			foreach ($this->contents as $value){
+				$i=$value->toArray();
+				if (is_array($i))
+					$l=array_merge($l,$i);
+			}
+		return $l;
+	}
+}
+
 class WidgetkitExPlugin{
 	
 	private $plugin_info;
@@ -44,10 +164,19 @@ class WidgetkitExPlugin{
 	
 	private $CMS;
 	
+	//true or false if installation path is correct
+	private $pathCorrect = false;
+	
+	//Use {wk} or uk prefix for CSS classes. Old Widgetkit uses uk prefix for UIkit, latest Widgetkits use {wk}
+	private $useWKPrefix;
+	
+	//Version of UIkit installed
+	private $UIkitVersion;
+	
 	public function __construct($appWK,$id=0){
 		$this->id=$id;
 		
-		$this->isJoomla=WidgetkitExPlugin::IsJoomlaInstalled();
+		$this->isJoomla=self::IsJoomlaInstalled();
 		
 		$this->plugin_info=$this->getWKPluginInfo($appWK);
 		
@@ -63,26 +192,33 @@ class WidgetkitExPlugin{
 		$wk_version=$this->getWKVersion();
 		$php_version=@phpversion();
 		array_push($this->debug_info,'Processing widget '.$this->plugin_info['name'].' (version '.$this->plugin_info['version'].') on '.$this->CMS.' '.$this->CMSVersion.' with Widgetkit '.$wk_version.' and PHP '.$php_version.'('.@php_sapi_name().')');
-		if (version_compare(WidgetkitExPlugin::minPHPVersion,$php_version)>0)
+		if (version_compare(self::minPHPVersion,$php_version)>0)
 			array_push($this->debug_error,'Your PHP is too old! Upgrade is strongly required! This widget may not work with your version of PHP.');
 		else
-			if (version_compare(WidgetkitExPlugin::stablePHPVersion,$php_version)>0)
+			if (version_compare(self::stablePHPVersion,$php_version)>0)
 				array_push($this->debug_warning,'Your PHP is quite old. Although this widget can work with your version of PHP, upgrade is recommended to the latest stable version of PHP.');
 			
-		if (version_compare(WidgetkitExPlugin::minWKVersion,$wk_version)>0)
+		if (version_compare(self::minWKVersion,$wk_version)>0)
 			array_push($this->debug_warning,"Your Widgetkit version is quite old. Although this widget may work with your version of Widgetkit, upgrade is recommended to the latest stable version of Widgetkit. Besides, you may experience some issues of missing options in the settings of this widget if you don't upgrade.");
 
 		array_push($this->debug_info,'Host: '.@php_uname());
 		$ipath=$this->plugin_info['path'];
 		array_push($this->debug_info,'Widget installation path: '.$ipath);
+		$this->pathCorrect=false;
 		if ($this->isJoomla)
-			if (preg_match_all('@.*\/administrator\/components\/com_widgetkit\/plugins\/widgets\/.+@',$ipath))
+			if (preg_match_all('@.*\/administrator\/components\/com_widgetkit\/plugins\/'.($this->isWidget ? 'widgets' : 'content').'\/.+@',$ipath))
+			{
 				array_push($this->debug_info,'Installation path is correct');
+				$this->pathCorrect=true;
+			}
 			else
 				array_push($this->debug_error,'Installation path is not correct, please fix it. Read more in the Wiki.');
 		else
-			if (preg_match_all('@.*\/wp-content\/plugins\/widgetkit\/plugins\/widgets\/.+@',$ipath))
+			if (preg_match_all('@.*\/wp-content\/plugins\/widgetkit\/plugins\/'.($this->isWidget ? 'widgets' : 'content').'\/.+@',$ipath))
+			{
 				array_push($this->debug_info,'Installation path is correct');
+				$this->pathCorrect=true;
+			}
 			else
 				array_push($this->debug_warning,'Installation path is not correct, please fix it. Read more in the Wiki.');
 
@@ -90,6 +226,46 @@ class WidgetkitExPlugin{
 			array_push($this->debug_info,'Detected CMS: Joomla');
 		else
 			array_push($this->debug_info,'Detected CMS: WordPress');
+		
+		$this->useWKPrefix=false;
+		$this->UIkitVersion=null;
+		if ($this->pathCorrect){
+			$wkuikit = $ipath.'/../../../vendor/assets/wkuikit';
+			if ( (file_exists($wkuikit)) && (is_dir($wkuikit)) ){
+				$this->useWKPrefix=true;
+				$wkuikit.='/js/uikit.min.js';
+				$this->UIkitVersion = self::readUIKitVersion($wkuikit);
+			}
+			if ($this->UIkitVersion==''){
+				$wkuikit = $ipath.'/../../../vendor/assets/uikit/js/uikit.min.js';
+				$this->UIkitVersion = self::readUIKitVersion($wkuikit);
+			}
+		}
+	}
+	
+	//Reads UIkit version from specified uikit.min.js file
+	private static function readUIKitVersion($filename){
+		if ( (!file_exists($filename)) || (!is_file($filename)) || (!is_readable($filename)) )
+			return null;
+		
+		$file_contents=file_get_contents($filename,false,null,0,30);
+		if ($file_contents===false)
+			return null;
+		/* Example of version format:
+		/*! UIkit 2.27.2 |
+		*/
+		if ( (preg_match('@\/\*\!\s+UIkit\s+(?<version>\d+\.\d+\.\d+)\s+\|@',$file_contents,$matches)==1) && (isset($matches['version'])) && ($matches['version']!='') )
+			return $matches['version'];
+		else
+			return null;
+	}
+	
+	public static function getCSSPrefix($appWK){
+		return $appWK['config']->get('theme.support') === 'noconflict' ? 'wk' : 'uk';
+	}
+	
+	public function getUIkitVersion(){
+		return ($this->UIkitVersion!='') ? $this->UIkitVersion : '2.26.3';
 	}
 
 	//If $firstName=true, then returns first name of the current user or empty string if the first name is unkown
@@ -144,7 +320,7 @@ class WidgetkitExPlugin{
 	public function getCMSName(){
 		return $this->CMS;
 	}
-	
+
 	//Returns true, if the current CMS is Joomla
 	public static function IsJoomlaInstalled(){
 		return ( (class_exists('JURI')) && (method_exists('JURI','base')) );
@@ -244,6 +420,7 @@ class WidgetkitExPlugin{
 	//wk_path		- directory on the server where the Widgetkit is installed
 	//root			- directory on the server where the website is located
 	//url			- absolute URL to the directory where the plugin is located
+	//safe_name		- unique safe name of the plugin, which can be used in CSS, HTML and JavaScript
 	private function getWKPluginInfo($appWK){
 		$info=[
 			'name'=>'',
@@ -259,7 +436,8 @@ class WidgetkitExPlugin{
 			'relativepath'=>'',
 			'wk_path'=>'',
 			'root'=>'',
-			'url'=>''
+			'url'=>'',
+			'safe_name'=>'',
 		];
 		
 		//We perform a sequental scan of parent directories of the current script to find the plugin install directory
@@ -280,12 +458,9 @@ class WidgetkitExPlugin{
 		
 		$needle=$widgetkit_dir_name.DIRECTORY_SEPARATOR."plugins".DIRECTORY_SEPARATOR."widgets".DIRECTORY_SEPARATOR;
 		$pos=strrpos(__DIR__,$needle);
-		$this->isWidget=(boolean)$pos;
 		if (!$pos){
-			$this->isWidget=false;
 			$needle=$widgetkit_dir_name.DIRECTORY_SEPARATOR."plugins".DIRECTORY_SEPARATOR."content".DIRECTORY_SEPARATOR;
 			$pos=strrpos(__DIR__,$needle);
-			$this->isContentProvider=(boolean)$pos;
 		}
 		if ($pos){
 			$info['root']=substr(__DIR__,0,$pos);
@@ -329,6 +504,11 @@ class WidgetkitExPlugin{
 				if (preg_match_all("@^\s*'plugin_website'\s*=>\s*'.*$@m",$f,$matches)){
 					$info['website']=explode("'",trim($matches[0][0]))[3];
 				}
+				if (preg_match_all("@^\s*'name'\s*=>\s*'.*$@m",$f,$matches)){
+					$raw_name=explode("'",trim($matches[0][0]))[3];
+					$this->isWidget = (substr( $raw_name, 0, 7 ) === "widget/");
+					$this->isContentProvider = (substr( $raw_name, 0, 8 ) === "content/");
+				}
 			}
 			$url=$appWK['url']->to('widgetkit');
 			if ($url){
@@ -339,9 +519,10 @@ class WidgetkitExPlugin{
 				$info['url'].=$info['relativepath'];
 			}
 		}
+		$info['safe_name'] = preg_replace('/[^A-Za-z]/', '', $info['codename']);
 		return $info;
 	}
-
+	
 	//Prints information for the "About" section of the plugin
 	//$appWK - is parameter that must be set to $app upon call.
 	public function printAboutInfo($appWK){
@@ -349,32 +530,81 @@ class WidgetkitExPlugin{
 		$versionDB=htmlspecialchars((isset($appWK['db_version']))?$appWK['db_version']:'Unknown');
 		$php_version=htmlspecialchars(@phpversion());
 		$phpinfo;
-		if (version_compare(WidgetkitExPlugin::minPHPVersion,$php_version)>0)
+		if (version_compare(self::minPHPVersion,$php_version)>0)
 			$phpinfo='<span  data-uk-tooltip class="uk-text-danger" style="margin-top: 5px;" title="{{ \'Your PHP is too old! Upgrade is strongly recommended! This plugin may not work with your version of PHP.\' |trans}}"><i class="uk-icon-warning  uk-margin-small-right"></i>'.$php_version.'</span>';
 		else
-		if (version_compare(WidgetkitExPlugin::stablePHPVersion,$php_version)>0)
+		if (version_compare(self::stablePHPVersion,$php_version)>0)
 			$phpinfo='<span  data-uk-tooltip class="uk-text-warning" style="margin-top: 5px;" title="{{ \'Your PHP is quite old. Although this plugin can work with your version of PHP, upgrade is recommended to the latest stable version of PHP.\' |trans}}"><i class="uk-icon-warning  uk-margin-small-right"></i>'.$php_version.'</span>';
 		else
 			$phpinfo='<span  data-uk-tooltip class="uk-text-success" style="margin-top: 5px;" title="{{ \'Your PHP version is OK.\' |trans}}"><i class="uk-icon-check uk-margin-small-right"></i>'.$php_version.' ('.@php_sapi_name().')</span>';
 
 		$wkinfo;
-		if (version_compare(WidgetkitExPlugin::minWKVersion,$versionWK)>0)
+		if (version_compare(self::minWKVersion,$versionWK)>0)
 			$wkinfo='<span  data-uk-tooltip class="uk-text-danger" style="margin-top: 5px;" title="{{ \'Your Widgetkit version is too old. Upgrade is strongly recommended. Although this plugin may work with your version of Widgetkit, upgrade is recommended to the latest stable version of Widgetkit.\' |trans}}"><i class="uk-icon-warning uk-margin-small-right"></i>'.$versionWK.'</span>';
-		if (version_compare(WidgetkitExPlugin::stableWKVersion,$versionWK)>0)
+		if (version_compare(self::stableWKVersion,$versionWK)>0)
 			$wkinfo='<span  data-uk-tooltip class="uk-text-warning" style="margin-top: 5px;" title="{{ \'Your Widgetkit version is quite old. Although this plugin may work with your version of Widgetkit, upgrade is recommended to the latest stable version of Widgetkit.\' |trans}}"><i class="uk-icon-warning uk-margin-small-right"></i>'.$versionWK.'</span>';
 		else
 			$wkinfo='<span  data-uk-tooltip class="uk-text-success" style="margin-top: 5px;" title="{{ \'Your Widgetkit version is OK.\' |trans}}"><i class="uk-icon-check uk-margin-small-right"></i>'.$versionWK.'</span>';
 		
-		if (!isset($this->plugin_info['codename'])){
+		$cmsinfo=$this->CMS.' '.$this->CMSVersion;
+		
+		$accessinfo;
+		$accessok=false;
+		$item=new WKDiskItem();
+		$item->AnalyzeItem($this->plugin_info['path']);
+		//Making it beautiful:
+		$accesslist=$item->printStructure();
+		if ($item->hasWriteAccessProblems())
+			$accessinfo='<span class="uk-text-danger"><i class="uk-icon uk-icon-warning uk-margin-small-right"></i>'.$appWK['translator']->trans('Failure').'</span>';
+		else
+			$accessinfo='<span class="uk-text-success"><i class="uk-icon uk-icon-success uk-margin-small-right"></i>'.$appWK['translator']->trans('Ok').'</span>';
+		$accessinfo.='<a href="#write-check-'.$this->plugin_info['safe_name'].'" data-uk-modal="{center:true}" class="uk-margin-small-left"><i class="uk-icon-info-circle"></i></a>';
+		
+		$files=json_encode($item->toArray());
+		
+		if ($this->pathCorrect)
+			$installpath='<span class="uk-text-success" style="word-break:break-all"><i class="uk-icon uk-icon-check uk-margin-small-right"></i>'.$this->plugin_info['path'].'</span>';
+		else
+			$installpath='<span class="uk-text-danger" style="word-break:break-all"><i class="uk-icon uk-icon-warning uk-margin-small-right"></i>'.$this->plugin_info['path'].'</span>';
+
+		$YoothemeProCompatible=($this->useWKPrefix) ? '<span class="uk-text-success"><i class="uk-icon-check uk-margin-small-right"></i>{{ "Yes" |trans}}</span>' : '<span class="uk-text-success"><i class="uk-icon-check uk-margin-small-right"></i>{{ "No" |trans}}</span>';
+		
+		if (!isset($this->plugin_info['safe_name'])){
 			echo <<< EOT
 <div class="uk-panel uk-panel-box uk-alert uk-alert-danger"><i class="uk-icon uk-icon-warning uk-margin-small-right"></i>{{ 'Failed to retrieve information' |trans}}</div>;
 EOT;
 			return;
 		}
+		
+		$canverify=true;
+		$filesintegrity='<button class="uk-button uk-button-small"';
+		if (!$canverify)
+			$filesintegrity.=' disabled';
+		else
+			$filesintegrity.=' onclick="verifyFiles'.$this->plugin_info['safe_name'].'()"';
+		$filesintegrity.='>'.$appWK['translator']->trans('Verify files').'</button>';
 	
 		echo <<< EOT
+<div id="write-check-{$this->plugin_info['safe_name']}" class="uk-modal">
+    <div class="uk-modal-dialog">
+		<div class="uk-modal-header">
+			<h2>{{ 'Details' | trans}}</h2>
+		</div>
+        <div class="uk-overflow-container">
+		{$accesslist}
+		</div>
+		<div class="uk-modal-footer">
+			<div class="uk-text-center">
+				<a class="uk-modal-close uk-button uk-button-primary">{{ 'Ok' |trans}}</a>
+			</div>
+		</div>
+    </div>
+</div>
+<div class="uk-hidden" id="files-{$this->plugin_info['safe_name']}">
+{$files}
+</div>
 <div class="uk-grid">
-	<div class="uk-text-center uk-width-medium-1-3" id="logo-{$this->plugin_info['codename']}">
+	<div class="uk-text-center uk-width-medium-1-3" id="logo-{$this->plugin_info['safe_name']}">
 	</div>
 	<div class="uk-width-medium-2-3">
 		<table class="uk-table uk-table-striped">
@@ -382,28 +612,36 @@ EOT;
 				<td>
 					{{ 'Plugin name' |trans}}
 				</td>
-				<td id="name-{$this->plugin_info['codename']}">
+				<td id="name-{$this->plugin_info['safe_name']}">
 				</td>
 			</tr>
 			<tr>
 				<td>
 					{{ 'Plugin version' |trans}}
 				</td>
-				<td id="version-{$this->plugin_info['codename']}">
+				<td id="version-{$this->plugin_info['safe_name']}">
 				</td>
 			</tr>
 			<tr>
 				<td>
 					{{ 'Plugin build date' |trans}}
 				</td>
-				<td id="build-{$this->plugin_info['codename']}">
+				<td id="build-{$this->plugin_info['safe_name']}">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					{{ 'CMS' |trans}}
+				</td>
+				<td id="cms-{$this->plugin_info['safe_name']}">
+					{$cmsinfo}
 				</td>
 			</tr>
 			<tr>
 				<td>
 					{{ 'Widgetkit version' |trans}}
 				</td>
-				<td id="version-wk-{$this->plugin_info['codename']}">
+				<td id="version-wk-{$this->plugin_info['safe_name']}">
 					{$wkinfo}
 				</td>
 			</tr>
@@ -411,7 +649,7 @@ EOT;
 				<td>
 					{{ 'Database version' |trans}}
 				</td>
-				<td id="version-db-{$this->plugin_info['codename']}">
+				<td id="version-db-{$this->plugin_info['safe_name']}">
 					{$versionDB}
 				</td>
 			</tr>
@@ -419,7 +657,7 @@ EOT;
 				<td>
 					{{ 'jQuery version' |trans}}
 				</td>
-				<td id="version-jquery-{$this->plugin_info['codename']}">
+				<td id="version-jquery-{$this->plugin_info['safe_name']}">
 					Unknown
 				</td>
 			</tr>
@@ -428,15 +666,33 @@ EOT;
 					{{ 'UIkit version' |trans}}
 				</td>
 				<td>
-					<span id="version-uikit-valid-{$this->plugin_info['codename']}" data-uk-tooltip class="uk-text-success" style="margin-top: 5px;" title="{{ 'Your UIkit version is OK.' |trans}}"><i class="uk-icon-check uk-margin-small-right"></i><span class="version-uikit-{$this->plugin_info['codename']}">Unknown</span></span>
-					<span id="version-uikit-invalid-{$this->plugin_info['codename']}" data-uk-tooltip class="uk-text-danger" style="margin-top: 5px;" title="{{ 'Your UIkit version is too old, please upgrade your Widgetkit.' |trans}}"><i class="uk-icon-warning uk-margin-small-right"></i><span class="version-uikit-{$this->plugin_info['codename']}">Unknown</span></span>
+					<span id="version-uikit-valid-{$this->plugin_info['safe_name']}" data-uk-tooltip class="uk-text-success" style="margin-top: 5px;" title="{{ 'Your UIkit version is OK.' |trans}}"><i class="uk-icon-check uk-margin-small-right"></i><span class="version-uikit-{$this->plugin_info['safe_name']}">Unknown</span></span>
+					<span id="version-uikit-invalid-{$this->plugin_info['safe_name']}" data-uk-tooltip class="uk-text-danger" style="margin-top: 5px;" title="{{ 'Your UIkit version is too old, please upgrade your Widgetkit.' |trans}}"><i class="uk-icon-warning uk-margin-small-right"></i><span class="version-uikit-{$this->plugin_info['safe_name']}">Unknown</span></span>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					{{ 'UIkit version in Widgetkit bundle' |trans}}
+				</td>
+				<td>
+					{$this->UIkitVersion}
+				</td>
+			</tr>
+			<tr>
+				<td>
+					{{ 'Yootheme Pro compatible' |trans}}
+				</td>
+				<td>
+					<span data-uk-tooltip style="margin-top: 5px;" title="{{ 'Widgetkit version 2.9.0 and later are compatible with Yootheme Pro.' |trans}}">
+						{$YoothemeProCompatible}
+					</span>
 				</td>
 			</tr>
 			<tr>
 				<td>
 					{{ 'AngularJS version' | trans}}
 				</td>
-				<td id="version-angularjs-{$this->plugin_info['codename']}">
+				<td id="version-angularjs-{$this->plugin_info['safe_name']}">
 					Unknown
 				</td>
 			</tr>
@@ -446,6 +702,30 @@ EOT;
 				</td>
 				<td>
 					{$phpinfo}
+				</td>
+			</tr>
+			<tr>
+				<td>
+					{{ 'Installation path' | trans}}
+				</td>
+				<td>
+					{$installpath}
+				</td>
+			</tr>
+			<tr>
+				<td>
+					{{ 'Write access check' | trans}}
+				</td>
+				<td>
+					{$accessinfo}
+				</td>
+			</tr>
+			<tr>
+				<td>
+					{{ 'Files integrity' | trans}}
+				</td>
+				<td>
+					{$filesintegrity}
 				</td>
 			</tr>
 			<tr>
@@ -460,31 +740,31 @@ EOT;
 				<td>
 					{{ 'Website' |trans}}
 				</td>
-				<td id="website-{$this->plugin_info['codename']}">
+				<td id="website-{$this->plugin_info['safe_name']}">
 				</td>
 			</tr>
 			<tr>
 				<td>
 					{{ 'Wiki and manuals' |trans}}
 				</td>
-				<td id="wiki-{$this->plugin_info['codename']}">
+				<td id="wiki-{$this->plugin_info['safe_name']}">
 				</td>
 			</tr>
 		</table>
-		<div id="update-{$this->plugin_info['codename']}">
-			<div id="update-available-{$this->plugin_info['codename']}" class="uk-panel uk-panel-box uk-alert-danger uk-text-center update-info-{$this->plugin_info['codename']} uk-hidden">
+		<div id="update-{$this->plugin_info['safe_name']}">
+			<div id="update-available-{$this->plugin_info['safe_name']}" class="uk-panel uk-panel-box uk-alert-danger uk-text-center update-info-{$this->plugin_info['safe_name']} uk-hidden">
 				<h3 class="uk-text-center">
 					<i class="uk-icon uk-icon-warning uk-margin-small-right"></i>{{ 'This plugin is outdated!' |trans}}
 				</h3>
 				<h4 class="uk-text-center">
 					{{ 'A new version is available. Please, update.' |trans}}
 				</h4>
-				<button type="button" class="uk-button uk-button-success" id="update-details-{$this->plugin_info['codename']}"><i class="uk-icon uk-icon-info-circle uk-margin-small-right"></i>{{ 'Update details' |trans}}</button>
+				<button type="button" class="uk-button uk-button-success" id="update-details-{$this->plugin_info['safe_name']}"><i class="uk-icon uk-icon-info-circle uk-margin-small-right"></i>{{ 'Update details' |trans}}</button>
 			</div>
-			<div id="update-ok-{$this->plugin_info['codename']}" class="uk-panel uk-panel-box uk-alert-success uk-text-center update-info-{$this->plugin_info['codename']} uk-hidden">
+			<div id="update-ok-{$this->plugin_info['safe_name']}" class="uk-panel uk-panel-box uk-alert-success uk-text-center update-info-{$this->plugin_info['safe_name']} uk-hidden">
 				<i class="uk-icon uk-icon-check uk-margin-small-right"></i>{{ 'Your version of the plugin is up to date!' |trans}}
 			</div>
-			<div id="update-problem-{$this->plugin_info['codename']}" class="uk-panel uk-panel-box uk-alert-danger uk-text-center update-info-{$this->plugin_info['codename']} uk-hidden">
+			<div id="update-problem-{$this->plugin_info['safe_name']}" class="uk-panel uk-panel-box uk-alert-danger uk-text-center update-info-{$this->plugin_info['safe_name']} uk-hidden">
 				<i class="uk-icon uk-icon-warning uk-margin-small-right"></i>{{ 'Failed to retrieve information about available updates.' |trans}}
 			</div>
 		</div>
@@ -503,7 +783,7 @@ EOT;
 		$origin=htmlspecialchars($appWK['request']->getBaseUrl());
 		$locale=htmlspecialchars($appWK['locale']);
 		
-		if (!isset($this->plugin_info['codename'])){
+		if (!isset($this->plugin_info['safe_name'])){
 			echo <<< EOT
 <div class="uk-panel uk-panel-box uk-alert uk-alert-danger"><i class="uk-icon uk-icon-warning uk-margin-small-right"></i>{{ 'Failed to retrieve information' |trans}}</div>;
 EOT;
@@ -517,16 +797,18 @@ EOT;
 	</p>
 </div>
 
-<button class="uk-button uk-button-success" data-uk-modal="{target:'#{$this->plugin_info['codename']}-subscribe'}"><i class="uk-icon uk-icon-check uk-margin-small-right"></i>{{ 'Subscribe' |trans}}</button>
+<div class="uk-text-center">
+<button class="uk-button uk-button-success" data-uk-modal="{target:'#{$this->plugin_info['safe_name']}-subscribe'}"><i class="uk-icon uk-icon-check uk-margin-small-right"></i>{{ 'Subscribe' |trans}}</button>
+</div>
 
-<div id="{$this->plugin_info['codename']}-subscribe" class="uk-modal">
+<div id="{$this->plugin_info['safe_name']}-subscribe" class="uk-modal">
 	<div class="uk-modal-dialog">
 		<a class="uk-modal-close uk-close"></a>
 		<div class="uk-overflow-container">
 			<div class="uk-panel uk-panel-box uk-alert">
 			<i class="uk-icon uk-icon-info-circle uk-margin-small-right"></i>{{ 'Please, fill in all the fields below, then click Submit button' |trans}}
 			</div>
-			<form class="uk-form uk-form-horizontal" action="https://valitov.us11.list-manage.com/subscribe/post?u=13280b8048b58d2be207f1dd5&amp;id=52d79713c6" method="post" id="form-{$this->plugin_info['codename']}-subscribe" target="_blank">
+			<form class="uk-form uk-form-horizontal" action="https://valitov.us11.list-manage.com/subscribe/post?u=13280b8048b58d2be207f1dd5&amp;id=52d79713c6" method="post" id="form-{$this->plugin_info['safe_name']}-subscribe" target="_blank">
 				<fieldset data-uk-margin>
 					<legend>{{ 'Subscription form' |trans}}</legend>
 					<div class="uk-form-row">
@@ -553,12 +835,12 @@ EOT;
 						<input type="text" name="ORIGIN" value="{$origin}">
 						<input type="text" name="PRODUCT" value="{$this->plugin_info['name']}">
 						<input type="text" name="LOCALE" value="{$locale}">
-						<input type="text" id="country_code-{$this->plugin_info['codename']}" name="COUNTRYID" value="">
-						<input type="text" id="country_name-{$this->plugin_info['codename']}" name="COUNTRY" value="">
-						<input type="text" id="region_code-{$this->plugin_info['codename']}" name="REGIONID" value="">
-						<input type="text" id="region_name-{$this->plugin_info['codename']}" name="REGION" value="">
-						<input type="text" id="city-{$this->plugin_info['codename']}" name="CITY" value="">
-						<input type="text" id="time_zone-{$this->plugin_info['codename']}" name="TIMEZONE" value="">
+						<input type="text" id="country_code-{$this->plugin_info['safe_name']}" name="COUNTRYID" value="">
+						<input type="text" id="country_name-{$this->plugin_info['safe_name']}" name="COUNTRY" value="">
+						<input type="text" id="region_code-{$this->plugin_info['safe_name']}" name="REGIONID" value="">
+						<input type="text" id="region_name-{$this->plugin_info['safe_name']}" name="REGION" value="">
+						<input type="text" id="city-{$this->plugin_info['safe_name']}" name="CITY" value="">
+						<input type="text" id="time_zone-{$this->plugin_info['safe_name']}" name="TIMEZONE" value="">
 					</div>
 				</fieldset>
 				<div class="uk-text-right uk-margin">
@@ -572,31 +854,31 @@ EOT;
 
 <script>
 	jQuery.validate({
-		form: '#form-{$this->plugin_info['codename']}-subscribe',
+		form: '#form-{$this->plugin_info['safe_name']}-subscribe',
 		modules : 'html5',
 		errorElementClass: 'uk-form-danger',
 		errorMessageClass: 'uk-text-danger',
 		validateOnBlur : true,
 		scrollToTopOnError : false
 	});
-	jQuery('#form-{$this->plugin_info['codename']}-subscribe').formchimp();
+	jQuery('#form-{$this->plugin_info['safe_name']}-subscribe').formchimp();
 	
 	/*Geolocation if nessesary*/
-	jQuery('#{$this->plugin_info['codename']}-subscribe').on({
+	jQuery('#{$this->plugin_info['safe_name']}-subscribe').on({
 		'show.uk.modal': function(){
-			if (!jQuery("#country_code-{$this->plugin_info['codename']}").val()){
+			if (!jQuery("#country_code-{$this->plugin_info['safe_name']}").val()){
 				jQuery.ajax({
 						'url': 'http://ip-api.com/json',
 						'type' : "GET",
 						'dataType' : 'json',
 						success: function (data, textStatus, jqXHR){
 							if (data){
-								jQuery("#country_code-{$this->plugin_info['codename']}").val(data.countryCode);
-								jQuery("#country_name-{$this->plugin_info['codename']}").val(data.country);
-								jQuery("#region_code-{$this->plugin_info['codename']}").val(data.region);
-								jQuery("#region_name-{$this->plugin_info['codename']}").val(data.regionName);
-								jQuery("#city-{$this->plugin_info['codename']}").val(data.city);
-								jQuery("#time_zone-{$this->plugin_info['codename']}").val(data.timezone);
+								jQuery("#country_code-{$this->plugin_info['safe_name']}").val(data.countryCode);
+								jQuery("#country_name-{$this->plugin_info['safe_name']}").val(data.country);
+								jQuery("#region_code-{$this->plugin_info['safe_name']}").val(data.region);
+								jQuery("#region_name-{$this->plugin_info['safe_name']}").val(data.regionName);
+								jQuery("#city-{$this->plugin_info['safe_name']}").val(data.city);
+								jQuery("#time_zone-{$this->plugin_info['safe_name']}").val(data.timezone);
 							}
 						}
 				});
@@ -608,6 +890,63 @@ EOT;
 EOT;
 	}
 
+	//Prints information for the "Donate" section of the plugin
+	//$appWK - is parameter that must be set to $app upon call.
+	public function printDonationInfo($appWK){
+		echo <<< EOT
+<div class="uk-panel uk-panel-box uk-alert">
+	<p>
+		<i class="uk-icon uk-icon-info-circle uk-margin-small-right"></i>{{ 'If you like this module, please, donate. It will help to support the project and improve it. You can choose any suitable payment method and donate any amount. Thank you!' | trans}}
+	</p>
+</div>
+
+<div class="uk-grid uk-grid-width-small-1-2 uk-grid-width-medium-1-3 uk-grid-width-large-1-4 uk-margin-top" data-uk-grid-match="{target:'.uk-panel'}">
+	<div>
+		<div class="uk-panel uk-panel-box uk-text-center uk-margin-bottom">
+			<p class="uk-panel-title">{{ 'Euro' |trans}} <i class="uk-icon uk-icon-euro"></i></p>
+			<p>{{ 'Payment methods:' |trans}}</p>
+			<ul style="list-style-type: none;">
+				<li><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BJJF3E6DBRYHA" target="_blank"><i class="uk-icon uk-icon-credit-card"></i> {{ 'Bank card' |trans}}</a></li>
+				<li><a href="https://www.paypal.me/valitov/0eur" target="_blank"><i class="uk-icon uk-icon-paypal"></i> {{ 'PayPal' |trans}}</a></li>
+			</ul>
+		</div>
+	</div>
+	<div>
+		<div class="uk-panel uk-panel-box uk-text-center uk-margin-bottom">
+			<p class="uk-panel-title">{{ 'USD' |trans}} <i class="uk-icon uk-icon-usd"></i></p>
+			<p>{{ 'Payment methods:' |trans}}</p>
+			<ul style="list-style-type: none;">
+				<li><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=B8VMNU7SEAU8J" target="_blank"><i class="uk-icon uk-icon-credit-card"></i> {{ 'Bank card' |trans}}</a></li>
+				<li><a href="https://www.paypal.me/valitov/0usd" target="_blank"><i class="uk-icon uk-icon-paypal"></i> {{ 'PayPal' |trans}}</a></li>
+			</ul>
+		</div>
+	</div>
+	<div>
+		<div class="uk-panel uk-panel-box uk-text-center uk-margin-bottom">
+			<p class="uk-panel-title">{{ 'Russian ruble' |trans}} <i class="uk-icon uk-icon-rouble"></i></p>
+			<p>{{ 'Payment methods:' |trans}}</p>
+			<ul style="list-style-type: none;">
+				<li><a href="https://money.yandex.ru/to/410011424143476" target="_blank"><i class="uk-icon uk-icon-credit-card"></i> {{ 'Bank card' |trans}}</a></li>
+				<li><a href="https://www.paypal.me/valitov/0rub" target="_blank"><i class="uk-icon uk-icon-paypal"></i> {{ 'PayPal' |trans}}</a></li>
+				<li><a href="https://money.yandex.ru/to/410011424143476" target="_blank">{{ 'Yandex Money' |trans}}</a></li>
+			</ul>
+		</div>
+	</div>
+	<div>
+		<div class="uk-panel uk-panel-box uk-text-center uk-margin-bottom">
+			<p class="uk-panel-title">{{ 'Other currencies' |trans}}</p>
+			<p>{{ 'Payment methods:' |trans}}</p>
+			<ul style="list-style-type: none;">
+				<li><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=BJJF3E6DBRYHA" target="_blank"><i class="uk-icon uk-icon-credit-card"></i> {{ 'Bank card' |trans}}</a></li>
+				<li><a href="https://www.paypal.me/valitov" target="_blank"><i class="uk-icon uk-icon-paypal"></i> {{ 'PayPal' |trans}}</a></li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+EOT;
+	}
+	
 	//Generates and returns Javascript code (without <script> tags) used for checking updates
 	//$appWK - is parameter that must be set to $app upon call.
 	//$settings - array that contains info about the installed plugin. Meaning of the keys:
@@ -636,7 +975,7 @@ EOT;
 		if ( (!isset($settings['infotimeout'])) || (!is_integer($settings['infotimeout'])) )
 			$settings['infotimeout']=5000;
 		//Checking for minimum set of required fields:
-		if ( (!isset($this->plugin_info['name'])) || (!isset($this->plugin_info['version'])) || (!isset($this->plugin_info['codename'])) )
+		if ( (!isset($this->plugin_info['name'])) || (!isset($this->plugin_info['version'])) || (!isset($this->plugin_info['codename'])) || ($this->plugin_info['safe_name']=='') )
 			return '';
 		if (!isset($settings['name']))
 			$settings['name']=$this->plugin_info['name'];
@@ -676,8 +1015,92 @@ EOT;
 		$modal=addcslashes($this->generateUpdateInfoDialog($appWK),"'");
 		
 		$configfile=$this->getPluginURL().'/config.json';
-		$minUIkitVersion=WidgetkitExPlugin::minUIkitVersion;
+		$minUIkitVersion=self::minUIkitVersion;
 		$js = <<< EOT
+	function verifyFiles{$this->plugin_info['safe_name']}(){
+		var modal = UIkit.modal.blockUI('<h2 class="uk-text-center uk-text-muted">{$appWK['translator']->trans('Please, wait...')}<i class="uk-icon-spinner uk-margin-left uk-icon-spin uk-icon-medium"></h2>',{'center':true});
+		jQuery.ajax({
+			'url': '{$settings['api']}{$settings['distr_name']}/tags',
+			'dataType' : 'json',
+			'type' : "GET",
+			success: function (data, textStatus, jqXHR){
+				if (data){
+					var found=false;
+					jQuery.each(data, function (index, value){
+						if (value.name=='{$settings['version']}'){
+							var filesTree='{$settings['api']}{$settings['distr_name']}/git/trees/'+value.commit.sha+'?recursive=1';
+							found=true;
+							jQuery.ajax({
+								'url': filesTree,
+								'dataType' : 'json',
+								'type' : "GET",
+								success: function (data, textStatus, jqXHR){
+									if (data){
+										var error_list='';
+										try {
+											var localfiles=JSON.parse(jQuery('#files-{$this->plugin_info['safe_name']}').html());
+										}
+										catch(err) {
+											UIkit.modal.alert('{$appWK['translator']->trans('Failed to parse JSON')}',{'center':true});
+											return;
+										}
+										jQuery.each(data.tree, function (index, value){
+											if ( (value.type=='blob') && (value.path.indexOf('{$this->plugin_info['safe_name']}/')==0) ){
+												var isvalid=false;
+												var isfound=false;
+												var localsha='';
+												var localsize=0;
+												
+												jQuery.each(localfiles, function (indexfile, valuefile){
+													if (valuefile.name==value.path){
+														isfound=true;
+														localsha=valuefile.hash;
+														localsize=valuefile.size;
+													}														
+												});
+												if (isfound){
+													if ( (localsize!=value.size) || (localsha!=value.sha) )
+														error_list+='<tr><td>'+value.path+'</td><td>{$appWK['translator']->trans('File is altered')}</td></tr>';
+												}
+												else
+													error_list+='<tr><td>'+value.path+'</td><td>{$appWK['translator']->trans('File is missing')}</td></tr>';
+											}
+										});
+										modal.hide();
+										if (error_list)
+											UIkit.modal.alert('<div class="uk-overflow-container"><table class="uk-table"><thead><tr><th>{$appWK['translator']->trans('File')}</th><th>{$appWK['translator']->trans('Problem')}</th></tr></thead><tbody>'+error_list+'</tbody></table></div>',{'center':true});
+										else
+											UIkit.modal.alert('{$appWK['translator']->trans('No problems detected')}',{'center':true});
+									}
+									else{
+										modal.hide();
+										UIkit.modal.alert("{$appWK['translator']->trans('Couldn\'t retrieve information about files of your release')}",{'center':true});
+									}
+								},
+								error: function (jqXHR, textStatus, errorThrown ){
+									modal.hide();
+									UIkit.modal.alert("{$appWK['translator']->trans('Failed to get information from server')}",{'center':true});
+								}
+							});
+						}
+					});
+					if (!found){
+						modal.hide();
+						UIkit.modal.alert("{$appWK['translator']->trans('Information about your release is not available. The files can\'t be verified.')}",{'center':true});
+					}
+				}
+				else{
+					modal.hide();
+					UIkit.modal.alert("{$appWK['translator']->trans('Failed to get information from server')}",{'center':true});
+				}
+			},
+			error: function (jqXHR, textStatus, errorThrown ){
+				modal.hide();
+				UIkit.modal.alert("{$appWK['translator']->trans('Failed to get information from server')}",{'center':true});
+			}
+		});
+	}
+	
 jQuery(document).ready(function(\$){
 	/* Display modal dialog with update info */
 	function showUpdateInfo(urlDownload,buildDate,buildVersion,releaseInfo){
@@ -691,42 +1114,42 @@ jQuery(document).ready(function(\$){
 	}
 	
 	/* Filling the about info */
-	\$('#name-{$this->plugin_info['codename']}').waitUntilExists(function(){
-		\$('#name-{$this->plugin_info['codename']}').empty();
-		\$('#name-{$this->plugin_info['codename']}').append('{$settings['name']}');
+	\$('#name-{$this->plugin_info['safe_name']}').waitUntilExists(function(){
+		\$('#name-{$this->plugin_info['safe_name']}').empty();
+		\$('#name-{$this->plugin_info['safe_name']}').append('{$settings['name']}');
 		
-		\$('#build-{$this->plugin_info['codename']}').empty();
-		\$('#build-{$this->plugin_info['codename']}').append('{$settings['date']}');
+		\$('#build-{$this->plugin_info['safe_name']}').empty();
+		\$('#build-{$this->plugin_info['safe_name']}').append('{$settings['date']}');
 		
-		\$('#website-{$this->plugin_info['codename']}').empty();
-		\$('#website-{$this->plugin_info['codename']}').append('<a href="{$settings['website']}" target="_blank">{$settings['website']}<i class="uk-icon uk-icon-external-link uk-margin-small-left"></i></a>');
+		\$('#website-{$this->plugin_info['safe_name']}').empty();
+		\$('#website-{$this->plugin_info['safe_name']}').append('<a href="{$settings['website']}" target="_blank">{$settings['website']}<i class="uk-icon uk-icon-external-link uk-margin-small-left"></i></a>');
 		
-		\$('#version-{$this->plugin_info['codename']}').empty();
-		\$('#version-{$this->plugin_info['codename']}').append('{$settings['version']}');
+		\$('#version-{$this->plugin_info['safe_name']}').empty();
+		\$('#version-{$this->plugin_info['safe_name']}').append('{$settings['version']}');
 		
-		\$('#logo-{$this->plugin_info['codename']}').empty();
-		\$('#logo-{$this->plugin_info['codename']}').append('<img class="uk-width-1-1" src="{$settings['logo']}" style="max-width:300px;">');
+		\$('#logo-{$this->plugin_info['safe_name']}').empty();
+		\$('#logo-{$this->plugin_info['safe_name']}').append('<img class="uk-width-1-1" src="{$settings['logo']}" style="max-width:300px;">');
 		
-		\$('#wiki-{$this->plugin_info['codename']}').empty();
-		\$('#wiki-{$this->plugin_info['codename']}').append('<a href="{$settings['wiki']}" target="_blank">{$settings['wiki']}<i class="uk-icon uk-icon-external-link uk-margin-small-left"></i></a>');
+		\$('#wiki-{$this->plugin_info['safe_name']}').empty();
+		\$('#wiki-{$this->plugin_info['safe_name']}').append('<a href="{$settings['wiki']}" target="_blank">{$settings['wiki']}<i class="uk-icon uk-icon-external-link uk-margin-small-left"></i></a>');
 		
-		\$('#version-jquery-{$this->plugin_info['codename']}').empty();
-		\$('#version-jquery-{$this->plugin_info['codename']}').append(\$.fn.jquery);
+		\$('#version-jquery-{$this->plugin_info['safe_name']}').empty();
+		\$('#version-jquery-{$this->plugin_info['safe_name']}').append(\$.fn.jquery);
 		
 		if (UIkit && UIkit.version){
-			\$('.version-uikit-{$this->plugin_info['codename']}').empty();
-			\$('.version-uikit-{$this->plugin_info['codename']}').append(UIkit.version);
-			\$('#version-uikit-valid-{$this->plugin_info['codename']}').removeClass("uk-hidden");
-			\$('#version-uikit-invalid-{$this->plugin_info['codename']}').removeClass("uk-hidden");
+			\$('.version-uikit-{$this->plugin_info['safe_name']}').empty();
+			\$('.version-uikit-{$this->plugin_info['safe_name']}').append(UIkit.version);
+			\$('#version-uikit-valid-{$this->plugin_info['safe_name']}').removeClass("uk-hidden");
+			\$('#version-uikit-invalid-{$this->plugin_info['safe_name']}').removeClass("uk-hidden");
 			if (versioncompare(UIkit.version,"{$minUIkitVersion}")<0)
-				\$('#version-uikit-valid-{$this->plugin_info['codename']}').addClass("uk-hidden");
+				\$('#version-uikit-valid-{$this->plugin_info['safe_name']}').addClass("uk-hidden");
 			else
-				\$('#version-uikit-invalid-{$this->plugin_info['codename']}').addClass("uk-hidden");
+				\$('#version-uikit-invalid-{$this->plugin_info['safe_name']}').addClass("uk-hidden");
 		}
 		
 		if (angular && angular.version && angular.version.full){
-			\$('#version-angularjs-{$this->plugin_info['codename']}').empty();
-			\$('#version-angularjs-{$this->plugin_info['codename']}').append(angular.version.full);
+			\$('#version-angularjs-{$this->plugin_info['safe_name']}').empty();
+			\$('#version-angularjs-{$this->plugin_info['safe_name']}').append(angular.version.full);
 		}
 		
 		var configfile="{$configfile}";
@@ -734,6 +1157,7 @@ jQuery(document).ready(function(\$){
 			'url': configfile,
 			'type' : "GET",
 			'dataType' : 'json',
+			'cache': false,
 			success: function (data, textStatus, jqXHR){
 				if (data){
 					/*Update all elements*/
@@ -756,8 +1180,8 @@ jQuery(document).ready(function(\$){
 	}
 	function failedToUpdate(){
 		$(widget_update_tag).waitUntilExists(function(){
-			\$('div.update-info-{$this->plugin_info['codename']}').addClass('uk-hidden');
-			\$('#update-problem-{$this->plugin_info['codename']}').removeClass('uk-hidden');
+			\$('div.update-info-{$this->plugin_info['safe_name']}').addClass('uk-hidden');
+			\$('#update-problem-{$this->plugin_info['safe_name']}').removeClass('uk-hidden');
 		});
 	}
 	
@@ -768,6 +1192,7 @@ jQuery(document).ready(function(\$){
 	\$.ajax({
 			'url': '{$settings['api']}{$settings['distr_name']}/releases/latest',
 			'type' : "GET",
+			'cache':false,
 			'dataType' : 'json',
 			success: function (data, textStatus, jqXHR){
 				if (data){
@@ -779,47 +1204,47 @@ jQuery(document).ready(function(\$){
 						else {
 							date_remote='';
 						}
-						var infotext='<p class="uk-margin-remove"><i class="uk-icon-info-circle uk-margin-small-right"></i>{$appWK['translator']->trans('New release of plugin %name% is available!',array('%name%' => $settings['name']))} {$appWK['translator']->trans('Version')} '+data.tag_name+'.</p><p class="uk-text-center uk-margin-remove"><button class="uk-button uk-button-mini uk-button-success" id="info-{$settings['distr_name']}">{$appWK['translator']->trans('Update details')}</button></p>';
+						var infotext='<div class="wk-noconflict"><p class="uk-margin-remove"><i class="uk-icon-info-circle uk-margin-small-right"></i>{$appWK['translator']->trans('New release of plugin %name% is available!',array('%name%' => $settings['name']))} {$appWK['translator']->trans('Version')} '+data.tag_name+'.</p><p class="uk-text-center uk-margin-remove"><button class="uk-button uk-button-mini uk-button-success" id="info-{$settings['distr_name']}">{$appWK['translator']->trans('Update details')}</button></p></div>';
 						
 						UIkit.notify(infotext, {'timeout':{$settings['infotimeout']},'pos':'top-center','status':'warning'});
 						\$('#info-{$settings['distr_name']}').click(function(){
 								showUpdateInfo(data.html_url,date_remote,data.tag_name,marked(data.body));
 						});
-						\$('#update-{$this->plugin_info['codename']}').waitUntilExists(function(){
-							\$('div.update-info-{$this->plugin_info['codename']}').addClass('uk-hidden');
-							\$('#update-available-{$this->plugin_info['codename']}').removeClass('uk-hidden');
+						\$('#update-{$this->plugin_info['safe_name']}').waitUntilExists(function(){
+							\$('div.update-info-{$this->plugin_info['safe_name']}').addClass('uk-hidden');
+							\$('#update-available-{$this->plugin_info['safe_name']}').removeClass('uk-hidden');
 							
-							\$('#version-local-{$this->plugin_info['codename']}').empty();
-							\$('#version-local-{$this->plugin_info['codename']}').append('{$settings['version']}');
+							\$('#version-local-{$this->plugin_info['safe_name']}').empty();
+							\$('#version-local-{$this->plugin_info['safe_name']}').append('{$settings['version']}');
 							
-							\$('#version-remote-{$this->plugin_info['codename']}').empty();
-							\$('#version-remote-{$this->plugin_info['codename']}').append(data.tag_name);
+							\$('#version-remote-{$this->plugin_info['safe_name']}').empty();
+							\$('#version-remote-{$this->plugin_info['safe_name']}').append(data.tag_name);
 							
-							\$('#date-local-{$this->plugin_info['codename']}').empty();
-							\$('#date-local-{$this->plugin_info['codename']}').append('{$settings['date']}');
+							\$('#date-local-{$this->plugin_info['safe_name']}').empty();
+							\$('#date-local-{$this->plugin_info['safe_name']}').append('{$settings['date']}');
 							
-							\$('#date-remote-{$this->plugin_info['codename']}').empty();
+							\$('#date-remote-{$this->plugin_info['safe_name']}').empty();
 							if (date_remote.length)
-								\$('#date-remote-{$this->plugin_info['codename']}').append(date_remote);
+								\$('#date-remote-{$this->plugin_info['safe_name']}').append(date_remote);
 							
-							\$('#release-info-{$this->plugin_info['codename']}').empty();
-							\$('#release-info-{$this->plugin_info['codename']}').append(marked(data.body));
+							\$('#release-info-{$this->plugin_info['safe_name']}').empty();
+							\$('#release-info-{$this->plugin_info['safe_name']}').append(marked(data.body));
 							
-							\$('#update-logo-{$this->plugin_info['codename']}').attr('src','{$settings['logo']}');
+							\$('#update-logo-{$this->plugin_info['safe_name']}').attr('src','{$settings['logo']}');
 							
-							\$('#download-{$this->plugin_info['codename']}').attr('href',data.html_url);
+							\$('#download-{$this->plugin_info['safe_name']}').attr('href',data.html_url);
 							
-							\$('#instructions-{$this->plugin_info['codename']}').attr('href','{$settings['wiki']}');
+							\$('#instructions-{$this->plugin_info['safe_name']}').attr('href','{$settings['wiki']}');
 							
-							\$('#update-details-{$this->plugin_info['codename']}').click(function(){
+							\$('#update-details-{$this->plugin_info['safe_name']}').click(function(){
 								showUpdateInfo(data.html_url,date_remote,data.tag_name,marked(data.body));
 							});
 						});
 					}
 					else{
-						\$('#update-{$this->plugin_info['codename']}').waitUntilExists(function(){
-							\$('div.update-info-{$this->plugin_info['codename']}').addClass('uk-hidden');
-							\$('#update-ok-{$this->plugin_info['codename']}').removeClass('uk-hidden');
+						\$('#update-{$this->plugin_info['safe_name']}').waitUntilExists(function(){
+							\$('div.update-info-{$this->plugin_info['safe_name']}').addClass('uk-hidden');
+							\$('#update-ok-{$this->plugin_info['safe_name']}').removeClass('uk-hidden');
 						});
 					}
 				}
@@ -925,7 +1350,7 @@ EOT;
 		}
 
 		if (is_object($var)) {
-			$output = method_exists($var, 'export') ? $var->export() : WidgetkitExPlugin::features_var_export((array) $var, '', FALSE, $count+1);
+			$output = method_exists($var, 'export') ? $var->export() : self::features_var_export((array) $var, '', FALSE, $count+1);
 		}
 		else if (is_array($var)) {
 			if (empty($var)) {
@@ -935,7 +1360,7 @@ EOT;
 			$output = "array(\n";
 			foreach ($var as $key => $value) {
 				// Using normal var_export on the key to ensure correct quoting.
-				$output .= "  " . var_export($key, TRUE) . " => " . WidgetkitExPlugin::features_var_export($value, '  ', FALSE, $count+1) . ",\n";
+				$output .= "  " . var_export($key, TRUE) . " => " . self::features_var_export($value, '  ', FALSE, $count+1) . ",\n";
 			}
 			$output .= ')';
 			}
@@ -1095,15 +1520,15 @@ EOT;
 		//We don't use prefix anymore, because good browsers can collapse output in groups.
 		//$prefix='['.$this->plugin_info['name'].' #'.$this->id.'] ';
 		$prefix='';
-		$datatable=WidgetkitExPlugin::isDataForTable($s);
+		$datatable=self::isDataForTable($s);
 		if ($datatable){
 		echo <<< EOT
 if (typeof console.table === "function"){
 	var data_list=[];
 EOT;
 		foreach ($s as $value){
-			echo "try { data_list.push(JSON.parse('".WidgetkitExPlugin::EncodeDataJson($value)."')); } catch(err) { console.error('Failed to parse JSON: '+err); ";
-			$this->printJSDebugString(WidgetkitExPlugin::features_var_export($value, 3));
+			echo "try { data_list.push(JSON.parse('".self::EncodeDataJson($value)."')); } catch(err) { console.error('Failed to parse JSON: '+err); ";
+			$this->printJSDebugString(self::features_var_export($value, 3));
 			echo "}";
 		}
 		echo <<< EOT
@@ -1121,8 +1546,8 @@ EOT;
 				if (is_string($s))
 					echo "console.info('".$prefix.$s."');";
 				else{
-					echo "try {console.info(JSON.parse('".WidgetkitExPlugin::EncodeDataJson($s)."')); } catch (err) { console.error('Failed to parse JSON: '+err); ";
-					$this->printJSDebugString(WidgetkitExPlugin::features_var_export($s), 3);
+					echo "try {console.info(JSON.parse('".self::EncodeDataJson($s)."')); } catch (err) { console.error('Failed to parse JSON: '+err); ";
+					$this->printJSDebugString(self::features_var_export($s), 3);
 					echo "}";
 				}
 				break;
@@ -1130,8 +1555,8 @@ EOT;
 				if (is_string($s))
 					echo "console.warn('".$prefix.$s."');";
 				else{
-					echo "try {console.warn(JSON.parse('".WidgetkitExPlugin::EncodeDataJson($s)."')); } catch (err) { console.error('Failed to parse JSON: '+err); ";
-					$this->printJSDebugString(WidgetkitExPlugin::features_var_export($s), 3);
+					echo "try {console.warn(JSON.parse('".self::EncodeDataJson($s)."')); } catch (err) { console.error('Failed to parse JSON: '+err); ";
+					$this->printJSDebugString(self::features_var_export($s), 3);
 					echo "}";
 				}
 				break;
@@ -1139,8 +1564,8 @@ EOT;
 				if (is_string($s))
 					echo "console.error('".$prefix.$s."');";
 				else{
-					echo "try {console.error(JSON.parse('".WidgetkitExPlugin::EncodeDataJson($s)."')); } catch (err) { console.error('Failed to parse JSON: '+err); ";
-					$this->printJSDebugString(WidgetkitExPlugin::features_var_export($s), 3);
+					echo "try {console.error(JSON.parse('".self::EncodeDataJson($s)."')); } catch (err) { console.error('Failed to parse JSON: '+err); ";
+					$this->printJSDebugString(self::features_var_export($s), 3);
 					echo "}";
 				}
 				break;
@@ -1148,8 +1573,8 @@ EOT;
 				if (is_string($s))
 					echo "console.log('".$prefix.$s."');";
 				else{
-					echo "try {console.log(JSON.parse('".WidgetkitExPlugin::EncodeDataJson($s)."')); } catch (err) { console.error('Failed to parse JSON: '+err); ";
-					$this->printJSDebugString(WidgetkitExPlugin::features_var_export($s), 3);
+					echo "try {console.log(JSON.parse('".self::EncodeDataJson($s)."')); } catch (err) { console.error('Failed to parse JSON: '+err); ";
+					$this->printJSDebugString(self::features_var_export($s), 3);
 					echo "}";
 				}
 				break;
