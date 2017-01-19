@@ -7,6 +7,11 @@ Web: http://www.valitov.me/
 Git: https://github.com/rvalitov/widgetkit-popover-ex
 */
 
+require_once(__DIR__.'/WidgetkitExPlugin.php');
+use WidgetkitEx\PopoverEx\WidgetkitExPlugin;
+
+$cssprefix=WidgetkitExPlugin::getCSSPrefix($app);
+
 // JS Options
 $options = array();
 $options[] = '\'pos\': \'' . $settings['position'] . '\'';
@@ -18,50 +23,50 @@ $myid=uniqid('wk-popover_ex');
 
 // Toggle
 $toggle  = 'wk-popover-toggle';
-$toggle .= $settings['toggle'] ? ' uk-icon-' . $settings['toggle'] . ' uk-icon-button' : ' wk-popover-custom';
+$toggle .= $settings['toggle'] ? ' '.$cssprefix.'-icon-' . $settings['toggle'] . ' '.$cssprefix.'-icon-button' : ' wk-popover-custom';
 
 // Panel
-$panel = 'uk-panel';
+$panel = $cssprefix.'-panel';
 switch ($settings['panel']) {
     case 'box' :
-        $panel .= ' uk-panel-box';
+        $panel .= ' '.$cssprefix.'-panel-box';
         break;
     case 'primary' :
-        $panel .= ' uk-panel-box uk-panel-box-primary';
+        $panel .= ' '.$cssprefix.'-panel-box '.$cssprefix.'-panel-box-primary';
         break;
     case 'secondary' :
-        $panel .= ' uk-panel-box uk-panel-box-secondary';
+        $panel .= ' '.$cssprefix.'-panel-box '.$cssprefix.'-panel-box-secondary';
         break;
 }
 
 // Title Size
 switch ($settings['title_size']) {
     case 'panel':
-        $title_size = 'uk-panel-title';
+        $title_size = $cssprefix.'-panel-title';
         break;
     case 'large':
-        $title_size = 'uk-heading-large uk-margin-top-remove';
+        $title_size = $cssprefix.'-heading-large '.$cssprefix.'-margin-top-remove';
         break;
     default:
-        $title_size = 'uk-' . $settings['title_size'] . ' uk-margin-top-remove';
+        $title_size = $cssprefix.'-' . $settings['title_size'] . ' '.$cssprefix.'-margin-top-remove';
 }
 
 // Link Style
 switch ($settings['link_style']) {
     case 'button':
-        $link_style = 'uk-button';
+        $link_style = $cssprefix.'-button';
         break;
     case 'primary':
-        $link_style = 'uk-button uk-button-primary';
+        $link_style = $cssprefix.'-button '.$cssprefix.'-button-primary';
         break;
     case 'button-large':
-        $link_style = 'uk-button uk-button-large';
+        $link_style = $cssprefix.'-button '.$cssprefix.'-button-large';
         break;
     case 'primary-large':
-        $link_style = 'uk-button uk-button-large uk-button-primary';
+        $link_style = $cssprefix.'-button '.$cssprefix.'-button-large '.$cssprefix.'-button-primary';
         break;
     case 'button-link':
-        $link_style = 'uk-button uk-button-link';
+        $link_style = $cssprefix.'-button '.$cssprefix.'-button-link';
         break;
     default:
         $link_style = '';
@@ -104,7 +109,7 @@ if (is_numeric($settings['toggle_opacity'])){
 }
 ?>
 <div class="uk-widgetkit-popover-ex <?php echo $settings['class']; ?>" id="<?php echo $myid;?>">
-    <div class="uk-position-relative uk-display-inline-block">
+    <div class="<?php echo $cssprefix?>-position-relative <?php echo $cssprefix?>-display-inline-block">
 
         <img src="<?php echo $image; ?>" alt="">
 
@@ -121,9 +126,9 @@ if (is_numeric($settings['toggle_opacity'])){
 
         ?>
 
-        <div class="uk-position-absolute uk-hidden-small" style="left:<?php echo $left; ?>; top:<?php echo $top; ?>;<?php echo $custom_style;?>" data-uk-dropdown="<?php echo $options; ?>">
+        <div class="<?php echo $cssprefix?>-position-absolute <?php echo $cssprefix?>-hidden-small" style="left:<?php echo $left; ?>; top:<?php echo $top; ?>;<?php echo $custom_style;?>" data-<?php echo $cssprefix?>-dropdown="<?php echo $options; ?>">
 
-            <?php if ($settings['contrast']) echo '<div class="uk-contrast">'; ?>
+            <?php if ($settings['contrast']) echo '<div class="'.$cssprefix.'-contrast">'; ?>
 
             <a class="<?php echo $toggle; ?>" style="<?php
 			echo $opacity_style;
@@ -144,7 +149,7 @@ if (is_numeric($settings['toggle_opacity'])){
 
             <?php if ($settings['contrast']) echo '</div>'; ?>
 
-            <div class="uk-dropdown-blank" <?php echo ($settings['width']) ? 'style="width:' . $settings['width'] . 'px;"': ''; ?>>
+            <div class="<?php echo $cssprefix?>-dropdown-blank" <?php echo ($settings['width']) ? 'style="width:' . $settings['width'] . 'px;"': ''; ?>>
 
                <?php echo $this->render('plugins/widgets/' . $widget->getConfig('name')  . '/views/_content.php', compact('item', 'settings', 'panel', 'title_size', 'link_style', 'link_target')); ?>
 
@@ -155,15 +160,15 @@ if (is_numeric($settings['toggle_opacity'])){
     <?php endforeach; ?>
     </div>
 
-    <div class="uk-margin uk-visible-small" data-uk-slideset="{default: 1}">
-        <div class="uk-margin">
-            <ul class="uk-slideset uk-grid uk-flex-center">
+    <div class="<?php echo $cssprefix?>-margin <?php echo $cssprefix?>-visible-small" data-<?php echo $cssprefix?>-slideset="{default: 1}">
+        <div class="<?php echo $cssprefix?>-margin">
+            <ul class="<?php echo $cssprefix?>-slideset <?php echo $cssprefix?>-grid <?php echo $cssprefix?>-flex-center">
                 <?php foreach ($items as $i => $item) : ?>
                 <li><?php echo $this->render('plugins/widgets/' . $widget->getConfig('name')  . '/views/_content.php', compact('item', 'settings', 'panel', 'title_size', 'link_style', 'link_target')); ?></li>
                 <?php endforeach; ?>
             </ul>
         </div>
-        <ul class="uk-slideset-nav uk-dotnav uk-flex-center"></ul>
+        <ul class="<?php echo $cssprefix?>-slideset-nav <?php echo $cssprefix?>-dotnav <?php echo $cssprefix?>-flex-center"></ul>
     </div>
 
 </div>
