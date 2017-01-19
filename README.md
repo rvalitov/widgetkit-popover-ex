@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Release-v1.2.1-green.svg?style=flat) ![Widgetkit](https://img.shields.io/badge/Widgetkit-v2.4.x+-green.svg?style=flat) ![Joomla](https://img.shields.io/badge/Joomla!-v3.4.x+-yellow.svg?style=flat) ![Wordpress](https://img.shields.io/badge/Wordpress-v4.4.x+-yellow.svg?style=flat) ![PHP7](https://img.shields.io/badge/PHP7-compatible-blue.svg?style=flat)
+![Version](https://img.shields.io/badge/Release-v1.2.2-green.svg?style=flat) ![Widgetkit](https://img.shields.io/badge/Widgetkit-v2.4.x+-green.svg?style=flat) ![Joomla](https://img.shields.io/badge/Joomla!-v3.4.x+-yellow.svg?style=flat) ![Wordpress](https://img.shields.io/badge/Wordpress-v4.4.x+-yellow.svg?style=flat) ![PHP7](https://img.shields.io/badge/PHP7-compatible-blue.svg?style=flat) ![YoothemePro](https://img.shields.io/badge/YoothemePro-compatible-blue.svg?style=flat)
 
 ![PopoverEx widget logo](https://raw.githubusercontent.com/wiki/rvalitov/widgetkit-popover-ex/images/logo.png)
 
@@ -10,6 +10,7 @@
 * **Collection of toggle icons** - you can choose a toggle icon from the predefined list.
 * **Hover/Click behavior** - you can select how the widget will respond: the dropdown can be displayed when the user moves their mouse over the icon or when they click it.
 * **Panel styles** - different panel styles for the dropdown.
+* **Compatible with Yootheme Pro** - you can use PopoverEx with [Yootheme Pro](https://yootheme.com/pro/).
 * **Backward compatibility** - all other behavior, styling and features of the original [Popover widget](http://yootheme.com/demo/widgetkit/joomla/index.php/home/popover) are preserved.
 * **Multilingual interface**, translated into languages:
 	* **English** (en_GB)
@@ -27,10 +28,12 @@ The new features that the PopoverEx has and that are not available in the origin
 * **Update notifications** - you will be notified if new versions of the widget are available.
 
 # Supported platforms
-* The code is based on Widgetkit 2.5.2 (identical to 2.5.3), however it should work with any Widgetkit 2.4.x and later. Tested on Widgetkit 2.5.x, 2.6.x, 2.7.x and 2.8.x too.
+* The core code is based on Widgetkit 2.5.2 and was updated since accordingly. This widget should work with any Widgetkit 2.4.x and later. Tested on Widgetkit 2.5.x, 2.6.x, 2.7.x, 2.8.x, 2.9.x.
 * PHP5 and PHP7 compatible
 * Joomla 3.4.x or later required
 * Wordpress 4.4.x or later
+
+**Read full system requirements [here](https://github.com/rvalitov/widgetkit-popover-ex/wiki/System-requirements).** 
 
 # How to install?
 The installation procedure is described [here](https://github.com/rvalitov/widgetkit-popover-ex/wiki/How-to-install).
