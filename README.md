@@ -1,4 +1,4 @@
-![Version](https://img.shields.io/badge/Release-v1.2.2-green.svg?style=flat) ![Widgetkit](https://img.shields.io/badge/Widgetkit-v2.4.x+-green.svg?style=flat) ![Joomla](https://img.shields.io/badge/Joomla!-v3.4.x+-yellow.svg?style=flat) ![Wordpress](https://img.shields.io/badge/Wordpress-v4.4.x+-yellow.svg?style=flat) ![PHP7](https://img.shields.io/badge/PHP7-compatible-blue.svg?style=flat) ![YoothemePro](https://img.shields.io/badge/YoothemePro-compatible-blue.svg?style=flat)
+![Version](https://img.shields.io/badge/Release-v1.2.3-green.svg?style=flat) ![Widgetkit](https://img.shields.io/badge/Widgetkit-v2.4.x+-green.svg?style=flat) ![Joomla](https://img.shields.io/badge/Joomla!-v3.4.x+-yellow.svg?style=flat) ![Wordpress](https://img.shields.io/badge/Wordpress-v4.4.x+-yellow.svg?style=flat) ![PHP7](https://img.shields.io/badge/PHP7-compatible-blue.svg?style=flat) ![YoothemePro](https://img.shields.io/badge/YoothemePro-compatible-blue.svg?style=flat)
 
 ![PopoverEx widget logo](https://raw.githubusercontent.com/wiki/rvalitov/widgetkit-popover-ex/images/logo.png)
 
@@ -25,6 +25,7 @@ The new features that the PopoverEx has and that are not available in the origin
 * **Multilingual interface**, translated into languages:
 	* **English** (en_GB)
 	* **Русский** (ru_RU)
+	* **Deutsch** (de_DE)
 	* Your language not listed? You can help with translation, [read more](https://github.com/rvalitov/widgetkit-popover-ex/wiki/Translation-issues).
 
 # Supported platforms
@@ -46,6 +47,7 @@ Some issues about using the widget are available in the [Wiki area](https://gith
 * The code is based on the original [Popover widget](http://yootheme.com/demo/widgetkit/joomla/index.php/home/popover) by [Yootheme](http://yootheme.com/).
 * Logo is based on [Tango Icon Library](https://www.iconfinder.com/iconsets/tango-icon-library)
 * The default toggle icon is created by [Icons Land](https://www.iconfinder.com/iconsets/softwaredemo)
+* Thanks to [Marco Rensch](https://github.com/marcorensch) for translation to German language.
 
 ## Disclaimer
 This project is NOT affiliated with, endorsed, or sponsored by the Yootheme. Widgetkit, its name, trademark, and other aspects of the app are trademarked and owned by their respective owners.
