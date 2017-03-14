@@ -10,12 +10,8 @@
 * **Collection of toggle icons** - you can choose a toggle icon from the predefined list.
 * **Hover/Click behavior** - you can select how the widget will respond: the dropdown can be displayed when the user moves their mouse over the icon or when they click it.
 * **Panel styles** - different panel styles for the dropdown.
-* **Compatible with Yootheme Pro** - you can use PopoverEx with [Yootheme Pro](https://yootheme.com/pro/).
+* **Compatible with Yootheme Pro** - you can use this widget with [Yootheme Pro](https://yootheme.com/pro/).
 * **Backward compatibility** - all other behavior, styling and features of the original [Popover widget](http://yootheme.com/demo/widgetkit/joomla/index.php/home/popover) are preserved.
-* **Multilingual interface**, translated into languages:
-	* **English** (en_GB)
-	* **Русский** (ru_RU)
-	* Your language not listed? You can help with translation, [read more](https://github.com/rvalitov/widgetkit-popover-ex/wiki/Translation-issues).
 
 ### Unique Features
 The new features that the PopoverEx has and that are not available in the original Popover widget:
@@ -26,6 +22,10 @@ The new features that the PopoverEx has and that are not available in the origin
 * **Opacity control** - you can define the transparency level of the icons.
 * **Tooltips for all options** - it's much easier to use the widget, because tooltips are available for all settings.
 * **Update notifications** - you will be notified if new versions of the widget are available.
+* **Multilingual interface**, translated into languages:
+	* **English** (en_GB)
+	* **Русский** (ru_RU)
+	* Your language not listed? You can help with translation, [read more](https://github.com/rvalitov/widgetkit-popover-ex/wiki/Translation-issues).
 
 # Supported platforms
 * The core code is based on Widgetkit 2.5.2 and was updated since accordingly. This widget should work with any Widgetkit 2.4.x and later. Tested on Widgetkit 2.5.x, 2.6.x, 2.7.x, 2.8.x, 2.9.x.

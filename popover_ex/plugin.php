@@ -96,12 +96,14 @@ return array(
 
         'init.site' => function($event, $app) {
 			$uikit=(WidgetkitExPlugin::getCSSPrefix($app)=='uk') ? 'uikit' : 'uikit2';
-			$app['styles']->add('widgetkit-popover_ex', 'plugins/widgets/popover_ex/styles/style.css', array($uikit));
+			$app['styles']->add('widgetkit-popover_ex', 'plugins/widgets/popover_ex/css/style.css', array($uikit));
         },
 
         'init.admin' => function($event, $app) {
 			$plugin=new WidgetkitExPlugin($app);
 			$uikit=(WidgetkitExPlugin::getCSSPrefix($app)=='uk') ? 'uikit' : 'uikit2';
+			//Backend CSS
+			$app['styles']->add('popover_ex_edit', 'plugins/widgets/popover_ex/css/popoverex.edit.css', array('widgetkit-application'));
 			//Adding our own translations:
 			$app['translator']->addResource('plugins/widgets/popover_ex/languages/'.$app['locale'].'.json');
 			//Edit template:
