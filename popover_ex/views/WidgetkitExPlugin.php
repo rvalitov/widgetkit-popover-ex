@@ -1206,7 +1206,6 @@ jQuery(document).ready(function(\$){
 		var dataError = sessionStorage.getItem('error-{$this->plugin_info['safe_name']}');
 		var d = new Date();
 		if ( (dataDate) && (dataVersion) && (dataVersion=='{$this->plugin_info['version']}') && (dataDate - d.getTime() < 35*60*1000) ){
-			console.log('Using cache');
 			//We have a cached value
 			if (dataStatus == 1){
 				//Update is available
@@ -1255,7 +1254,7 @@ jQuery(document).ready(function(\$){
 			return;
 		}
 	}
-	console.log('No cache');
+
 	\$.ajax({
 			'url': '{$settings['api']}{$settings['distr_name']}/releases/latest',
 			'type' : "GET",
