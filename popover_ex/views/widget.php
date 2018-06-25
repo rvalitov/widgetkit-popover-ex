@@ -142,7 +142,7 @@ if (is_numeric($settings['toggle_opacity'])){
 				if ( (isset($item['custom_icon_image'])) && (strlen(trim($item['custom_icon_image']))>0) )
 					$toggle_file=$item['custom_icon_image'];
 				if (strlen($toggle_file)>0)
-					echo 'background-image: url(\'' . $toggle_file . '\')';
+					echo 'background-image: url(\'/' . $toggle_file . '\')';
 			}
 			
 			?>"></a>
