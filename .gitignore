@@ -14,7 +14,3 @@ Thumbs.db
 #archives
 *.zip
 *.rar
-
-#hidden files:
-.*
-!/.gitignore
